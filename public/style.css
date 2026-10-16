@@ -159,3 +159,6 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
 .wv-stage.is-full .wv-top { padding: 18px 24px; font-size: 13px; }
 .wv-stage.is-full .wv-credit { left: 24px; bottom: 20px; font-size: 13px; }
 html.wv-noscroll, html.wv-noscroll body { overflow: hidden; }
+
+/* title card: the two smaller languages carry their language code */
+.wv-t-langs b { font-weight: 600; opacity: .5; margin-right: .6em; letter-spacing: .2em; }

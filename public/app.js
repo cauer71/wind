@@ -10,9 +10,9 @@
 
   // ---------- language ----------
   const I18N = {
-    de: { avgLong: 'Mittel 48 h', windTitle: 'Windgeschwindigkeit', airTitle: 'Luftqualität', polTitle: 'Pollen und Sporen', now: 'Jetzt', gust: 'Böen', avg: 'Ø 48 h', avgPm: 'Ø 48 h PM10', avgPol: 'Ø 48 h Pollen', pm10: 'Feinstaub PM10', pollen: 'Pollen', spores: 'Sporen', sub: 'Wind, Luft und Pollen über Bozen', sample: 'Beispieldaten', pause: 'Pause', play: 'Abspielen', live: 'Live', replay: 'Verlauf', back: 'Zurück zu Live', play: 'Verlauf abspielen', polTitle: 'Pollen und Feinstaub', subT: 'Wind, Luft und Pollen über {p}', none: 'kaum Pollen', alder: 'Erle', birch: 'Birke', grass: 'Gräser', mugwort: 'Beifuß', olive: 'Olive', ragweed: 'Ambrosia' },
-    it: { avgLong: 'Media 48 h', windTitle: 'Velocità del vento', airTitle: "Qualità dell'aria", polTitle: 'Pollini e spore', now: 'Ora', gust: 'Raffiche', avg: 'Ø 48 h', avgPm: 'Ø 48 h PM10', avgPol: 'Ø 48 h pollini', pm10: 'Polveri sottili PM10', pollen: 'Pollini', spores: 'Spore', sub: 'Vento, aria e pollini sopra Bolzano', sample: 'Dati di esempio', pause: 'Pausa', play: 'Avvia', live: 'Live', replay: 'Storico', back: 'Torna al live', play: 'Riproduci storico', polTitle: 'Pollini e polveri', subT: 'Vento, aria e pollini sopra {p}', none: 'pochi pollini', alder: 'Ontano', birch: 'Betulla', grass: 'Graminacee', mugwort: 'Artemisia', olive: 'Olivo', ragweed: 'Ambrosia' },
-    en: { avgLong: '48 h average', windTitle: 'Wind speed', airTitle: 'Air quality', polTitle: 'Pollen and spores', now: 'Now', gust: 'Gusts', avg: '48 h avg', avgPm: '48 h avg PM10', avgPol: '48 h avg pollen', pm10: 'Particulates PM10', pollen: 'Pollen', spores: 'Spores', sub: 'Wind, air and pollen above Bolzano', sample: 'Sample data', pause: 'Pause', play: 'Play', live: 'Live', replay: 'History', back: 'Back to live', play: 'Play history', polTitle: 'Pollen and particulates', subT: 'Wind, air and pollen above {p}', none: 'little pollen', alder: 'Alder', birch: 'Birch', grass: 'Grass', mugwort: 'Mugwort', olive: 'Olive', ragweed: 'Ragweed' }
+    de: { avgLong: 'Mittel 48 h', windTitle: 'Windgeschwindigkeit', airTitle: 'Luftqualität', polTitle: 'Pollen und Sporen', now: 'Jetzt', gust: 'Böen', avg: 'Ø 48 h', avgPm: 'Ø 48 h PM10', avgPol: 'Ø 48 h Pollen', pm10: 'Feinstaub PM10', pollen: 'Pollen', spores: 'Sporen', sub: 'Wind, Luft und Pollen über Bozen', sample: 'Beispieldaten', pause: 'Pause', play: 'Abspielen', live: 'Live', replay: 'Verlauf', back: 'Zurück zu Live', play: 'Verlauf abspielen', polTitle: 'Pollen und Feinstaub', subT: 'Wind, Luft und Pollen über {p}', none: 'kaum Pollen', alder: 'Erle', birch: 'Birke', grass: 'Gräser', mugwort: 'Beifuß', olive: 'Olive', ragweed: 'Ambrosia', pollenU: 'Pollen' },
+    it: { avgLong: 'Media 48 h', windTitle: 'Velocità del vento', airTitle: "Qualità dell'aria", polTitle: 'Pollini e spore', now: 'Ora', gust: 'Raffiche', avg: 'Ø 48 h', avgPm: 'Ø 48 h PM10', avgPol: 'Ø 48 h pollini', pm10: 'Polveri sottili PM10', pollen: 'Pollini', spores: 'Spore', sub: 'Vento, aria e pollini sopra Bolzano', sample: 'Dati di esempio', pause: 'Pausa', play: 'Avvia', live: 'Live', replay: 'Storico', back: 'Torna al live', play: 'Riproduci storico', polTitle: 'Pollini e polveri', subT: 'Vento, aria e pollini sopra {p}', none: 'pochi pollini', alder: 'Ontano', birch: 'Betulla', grass: 'Graminacee', mugwort: 'Artemisia', olive: 'Olivo', ragweed: 'Ambrosia', pollenU: 'Pollini' },
+    en: { avgLong: '48 h average', windTitle: 'Wind speed', airTitle: 'Air quality', polTitle: 'Pollen and spores', now: 'Now', gust: 'Gusts', avg: '48 h avg', avgPm: '48 h avg PM10', avgPol: '48 h avg pollen count', pm10: 'Particulates PM10', pollen: 'Pollen count', spores: 'Spores', sub: 'Wind, air and pollen above Bolzano', sample: 'Sample data', pause: 'Pause', play: 'Play', live: 'Live', replay: 'History', back: 'Back to live', play: 'Play history', polTitle: 'Pollen and particulates', subT: 'Wind, air and pollen over {p}', none: 'low pollen', alder: 'Alder', birch: 'Birch', grass: 'Grass', mugwort: 'Mugwort', olive: 'Olive', ragweed: 'Ragweed', pollenU: 'Pollen' }
   };
   const COMPASS = {
     de: ['N','NNO','NO','ONO','O','OSO','SO','SSO','S','SSW','SW','WSW','W','WNW','NW','NNW'],
@@ -20,15 +20,19 @@
     en: ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW']
   };
   const LOC = { de: 'de-DE', it: 'it-IT', en: 'en-GB' };
-  let lang = 'de', nf1, nf0, tf;
+  let lang = 'de', nf1, nf0;
+  const TF = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Europe/Rome' });
   function makeFmt() {
     nf1 = new Intl.NumberFormat(LOC[lang], { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     nf0 = new Intl.NumberFormat(LOC[lang], { maximumFractionDigits: 0 });
-    tf = new Intl.DateTimeFormat(LOC[lang], { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
   }
   makeFmt();
   const FMT = {
-    time: (v) => tf.format(new Date(v)),
+    time: (v) => {
+      // same in all three languages: day.month. hour:minute (Bozen time)
+      const p = Object.fromEntries(TF.formatToParts(new Date(v)).map((x) => [x.type, x.value]));
+      return `${p.day}.${p.month}. ${p.hour}:${p.minute}`;
+    },
     wind_kmh: (v) => nf1.format(v), gust_kmh: (v) => nf1.format(v),
     dir_deg: (v) => nf0.format(v), pm10_ugm3: (v) => nf0.format(v), no2_ugm3: (v) => nf0.format(v),
     pollen_m3: (v) => nf0.format(v), pm25_ugm3: (v) => nf0.format(v)
@@ -511,7 +515,12 @@
     pgBtn.textContent = `${page + 1}/4`;
     T.gauge = gaugeTarget();
     lastLang = lastPage;
-    if (lang !== LANGS[0]) setLang(LANGS[0], false);
+    if (page === 0) {
+      // every time the title appears, the next language is the big word; the other two stay small
+      titleLang = LANGS[titleTurn++ % LANGS.length];
+      if (lang !== titleLang) setLang(titleLang, false);
+      renderTitle();
+    } else if (lang !== LANGS[0]) setLang(LANGS[0], false);
     dirty = true;
   }
   pgBtn.addEventListener('click', () => setPage((page + 1) % 4));
@@ -534,7 +543,7 @@
 
   // ---------- place ----------
   let place = { code: '83200MS', de: 'Bozen', it: 'Bolzano' };
-  const placeName = () => (lang === 'it' ? place.it : place.de);
+  const placeName = () => (lang === 'de' ? place.de : place.it);   // English uses the Italian name (Bolzano, Merano …)
   const nowLabEl = hud.querySelector('.wv-nowlab');
   const polTopEl = document.getElementById('wv-poltop');
   const hf = () => new Intl.DateTimeFormat(LOC[lang], { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
@@ -650,7 +659,7 @@
 
   // ---------- loop ----------
   let last = performance.now(), dirty = true, flagPh = 0;
-  const flagLetters = Array.from(document.querySelectorAll('#wv-flag span'));
+  let flagLetters = Array.from(document.querySelectorAll('#wv-flag span'));
   function waveFlag(dt) {
     // a very light flag wave through the letters; speed and direction follow the wind
     if (reduce || page !== 0) return;
@@ -670,7 +679,7 @@
       if (idx + 1 >= rows.length) setPlaying(false); else showRow(idx + 1);
     }
     if (now - lastPage > PAGE_MS[page]) setPage((page + 1) % 4);
-    else if (now - lastLang > LANG_MS) { lastLang = now; setLang(LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length], true); }
+    else if (page !== 0 && now - lastLang > LANG_MS) { lastLang = now; setLang(LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length], true); }
 
     const k = reduce ? 1 : 1 - Math.exp(-dt / 1.6);
     for (const key of ['wind', 'gust', 'dirX', 'dirY', 'aq', 'pollen', 'spores', 'dirA']) S[key] += (T[key] - S[key]) * k;
@@ -803,12 +812,36 @@
   const errEl = document.getElementById('wv-err');
   const mWind = document.getElementById('wv-m-wind'), mAir = document.getElementById('wv-m-air'), mTime = document.getElementById('wv-m-time');
   const stamp = new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
+  // ---------- title card ----------
+  const WORD = { de: 'Wind', it: 'Vento', en: 'Wind' };
+  const flagEl = document.getElementById('wv-flag');
+  const langsEl = titleCard.querySelector('.wv-t-langs');
+  let titleLang = 'de', titleTurn = 0;
+  function renderTitle() {
+    const l = titleLang;
+    const big = WORD[l].toUpperCase();
+    flagEl.textContent = '';
+    flagEl.setAttribute('aria-label', big);
+    flagEl.setAttribute('lang', l);
+    for (const ch of big) { const sp = document.createElement('span'); sp.textContent = ch; flagEl.appendChild(sp); }
+    flagLetters = Array.from(flagEl.children);
+    langsEl.textContent = '';
+    LANGS.filter((x) => x !== l).forEach((x, i) => {
+      if (i) langsEl.appendChild(document.createElement('i'));
+      const sp = document.createElement('span'); sp.setAttribute('lang', x);
+      const code = document.createElement('b'); code.textContent = x.toUpperCase();
+      sp.appendChild(code); sp.appendChild(document.createTextNode(WORD[x]));
+      langsEl.appendChild(sp);
+    });
+    const first = l === 'de' ? place.de : place.it, second = l === 'de' ? place.it : place.de;
+    kickerEl.textContent = first === second ? first : `${first} · ${second}`;
+    titleSub.textContent = I18N[lang].subT.replace('{p}', placeName());
+  }
   function showPlace(p) {
     place = p;
     titleEl.textContent = `Wind ${p.de}`;
     document.title = `Wind ${p.de} · Südtirol`;
-    kickerEl.textContent = p.de === p.it ? p.de : `${p.de} · ${p.it}`;
-    titleSub.textContent = I18N[lang].subT.replace('{p}', placeName());
+    renderTitle();
   }
 
   // ---------- data ----------

@@ -85,3 +85,31 @@ test('soundtrack credit fades in at the start and out again', async ({ page }) =
   // permanent attribution in the footer
   await expect(page.locator('#wv-foot')).toContainText("'Ephemera' by Scott Buckley");
 });
+
+test('title shows a different language large each time it appears', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#wv-title')).toHaveText('Wind Bozen');
+  const title = async () => ({
+    big: await page.locator('#wv-flag').getAttribute('aria-label'),
+    small: (await page.locator('.wv-t-langs span').allTextContents()).join(' | '),
+    kicker: await page.locator('#wv-kicker').textContent()
+  });
+  const nextTitle = () => page.evaluate(() => { for (let k = 0; k < 4; k++) document.getElementById('wv-pg').click(); });
+  expect(await title()).toEqual({ big: 'WIND', small: 'ITVento | ENWind', kicker: 'Bozen · Bolzano' });
+  await nextTitle();
+  expect(await title()).toEqual({ big: 'VENTO', small: 'DEWind | ENWind', kicker: 'Bolzano · Bozen' });
+  await nextTitle();
+  expect(await title()).toEqual({ big: 'WIND', small: 'DEWind | ITVento', kicker: 'Bolzano · Bozen' });
+  await expect(page.locator('.wv-t-sub')).toHaveText('Wind, air and pollen over Bolzano');
+});
+
+test('time top left has no weekday and is the same in every language', async ({ page }) => {
+  await page.goto('/');
+  const time = page.locator('.wv-time');
+  await expect(time).toHaveText(/^\d{2}\.\d{2}\. \d{2}:\d{2}$/);
+  const shown = await time.textContent();
+  for (const l of ['it', 'en', 'de']) {
+    await page.evaluate((x) => document.querySelector(`.wv-lang[data-lang="${x}"]`).click(), l);
+    await expect(time).toHaveText(shown);
+  }
+});
