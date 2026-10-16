@@ -2,7 +2,7 @@
 (function () {
   const TAU = Math.PI * 2, CAMZ = 3.0;
   // every page runs once in each language: 3 × 5 s
-  const STEP_ROW = 8000, LANG_MS = 5000, LANGS = ['de', 'it', 'en'], PAGE_MS = [15000, 15000, 15000, 15000];
+  const STEP_ROW = 8000, LANG_MS = 5000, LANGS = ['de', 'it', 'en'], PAGE_MS = [15000, 15000, 15000, 15000, 15000], NPAGE = PAGE_MS.length;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const num = (v) => { const n = v == null ? NaN : Number(v); return Number.isFinite(n) ? n : 0; };
@@ -10,9 +10,9 @@
 
   // ---------- language ----------
   const I18N = {
-    de: { avgLong: 'Mittel 48 h', windTitle: 'Windgeschwindigkeit', airTitle: 'Luftqualität', polTitle: 'Pollen und Sporen', now: 'Jetzt', gust: 'Böen', avg: 'Ø 48 h', avgPm: 'Ø 48 h PM10', avgPol: 'Ø 48 h Pollen', pm10: 'Feinstaub PM10', pollen: 'Pollen', spores: 'Sporen', sub: 'Wind, Luft und Pollen über Bozen', sample: 'Beispieldaten', pause: 'Pause', play: 'Abspielen', live: 'Live', replay: 'Verlauf', back: 'Zurück zu Live', play: 'Verlauf abspielen', polTitle: 'Pollen und Feinstaub', subT: 'Wind, Luft und Pollen über {p}', none: 'kaum Pollen', alder: 'Erle', birch: 'Birke', grass: 'Gräser', mugwort: 'Beifuß', olive: 'Olive', ragweed: 'Ambrosia', pollenU: 'Pollen' },
-    it: { avgLong: 'Media 48 h', windTitle: 'Velocità del vento', airTitle: "Qualità dell'aria", polTitle: 'Pollini e spore', now: 'Ora', gust: 'Raffiche', avg: 'Ø 48 h', avgPm: 'Ø 48 h PM10', avgPol: 'Ø 48 h pollini', pm10: 'Polveri sottili PM10', pollen: 'Pollini', spores: 'Spore', sub: 'Vento, aria e pollini sopra Bolzano', sample: 'Dati di esempio', pause: 'Pausa', play: 'Avvia', live: 'Live', replay: 'Storico', back: 'Torna al live', play: 'Riproduci storico', polTitle: 'Pollini e polveri', subT: 'Vento, aria e pollini sopra {p}', none: 'pochi pollini', alder: 'Ontano', birch: 'Betulla', grass: 'Graminacee', mugwort: 'Artemisia', olive: 'Olivo', ragweed: 'Ambrosia', pollenU: 'Pollini' },
-    en: { avgLong: '48 h average', windTitle: 'Wind speed', airTitle: 'Air quality', polTitle: 'Pollen and spores', now: 'Now', gust: 'Gusts', avg: '48 h avg', avgPm: '48 h avg PM10', avgPol: '48 h avg pollen count', pm10: 'Particulates PM10', pollen: 'Pollen count', spores: 'Spores', sub: 'Wind, air and pollen above Bolzano', sample: 'Sample data', pause: 'Pause', play: 'Play', live: 'Live', replay: 'History', back: 'Back to live', play: 'Play history', polTitle: 'Pollen and particulates', subT: 'Wind, air and pollen over {p}', none: 'low pollen', alder: 'Alder', birch: 'Birch', grass: 'Grass', mugwort: 'Mugwort', olive: 'Olive', ragweed: 'Ragweed', pollenU: 'Pollen' }
+    de: { avgLong: 'Mittel 48 h', windTitle: 'Windgeschwindigkeit', airTitle: 'Luftqualität', polTitle: 'Pollen und Sporen', now: 'Jetzt', gust: 'Böen', avg: 'Ø 48 h', avgPm: 'Ø 48 h PM10', avgPol: 'Ø 48 h Pollen', pm10: 'Feinstaub PM10', pollen: 'Pollen', spores: 'Sporen', sub: 'Wind, Luft und Pollen über Bozen', sample: 'Beispieldaten', pause: 'Pause', play: 'Abspielen', live: 'Live', replay: 'Verlauf', back: 'Zurück zu Live', play: 'Verlauf abspielen', polTitle: 'Pollen und Feinstaub', subT: 'Wind, Luft und Pollen über {p}', none: 'kaum Pollen', alder: 'Erle', birch: 'Birke', grass: 'Gräser', mugwort: 'Beifuß', olive: 'Olive', ragweed: 'Ambrosia', pollenU: 'Pollen', no2Title: 'Stickstoffdioxid', no2Lab: 'NO₂', avgMax: 'Mittel · Max 48 h', o3so2: 'Ozon · Schwefeldioxid', o3: 'Ozon', so2: 'Schwefeldioxid', polTitle: 'Pollen', eaqi: ['gut', 'mittelmäßig', 'mäßig', 'schlecht', 'sehr schlecht', 'extrem schlecht'] },
+    it: { avgLong: 'Media 48 h', windTitle: 'Velocità del vento', airTitle: "Qualità dell'aria", polTitle: 'Pollini e spore', now: 'Ora', gust: 'Raffiche', avg: 'Ø 48 h', avgPm: 'Ø 48 h PM10', avgPol: 'Ø 48 h pollini', pm10: 'Polveri sottili PM10', pollen: 'Pollini', spores: 'Spore', sub: 'Vento, aria e pollini sopra Bolzano', sample: 'Dati di esempio', pause: 'Pausa', play: 'Avvia', live: 'Live', replay: 'Storico', back: 'Torna al live', play: 'Riproduci storico', polTitle: 'Pollini e polveri', subT: 'Vento, aria e pollini sopra {p}', none: 'pochi pollini', alder: 'Ontano', birch: 'Betulla', grass: 'Graminacee', mugwort: 'Artemisia', olive: 'Olivo', ragweed: 'Ambrosia', pollenU: 'Pollini', no2Title: 'Biossido di azoto', no2Lab: 'NO₂', avgMax: 'Media · max 48 h', o3so2: 'Ozono · biossido di zolfo', o3: 'Ozono', so2: 'Biossido di zolfo', polTitle: 'Pollini', eaqi: ['buona', 'discreta', 'moderata', 'scadente', 'molto scadente', 'estremamente scadente'] },
+    en: { avgLong: '48 h average', windTitle: 'Wind speed', airTitle: 'Air quality', polTitle: 'Pollen and spores', now: 'Now', gust: 'Gusts', avg: '48 h avg', avgPm: '48 h avg PM10', avgPol: '48 h avg pollen count', pm10: 'Particulates PM10', pollen: 'Pollen count', spores: 'Spores', sub: 'Wind, air and pollen above Bolzano', sample: 'Sample data', pause: 'Pause', play: 'Play', live: 'Live', replay: 'History', back: 'Back to live', play: 'Play history', polTitle: 'Pollen and particulates', subT: 'Wind, air and pollen over {p}', none: 'low pollen', alder: 'Alder', birch: 'Birch', grass: 'Grass', mugwort: 'Mugwort', olive: 'Olive', ragweed: 'Ragweed', pollenU: 'Pollen', no2Title: 'Nitrogen dioxide', no2Lab: 'NO₂', avgMax: '48 h average · max', o3so2: 'Ozone · sulphur dioxide', o3: 'Ozone', so2: 'Sulphur dioxide', polTitle: 'Pollen', eaqi: ['good', 'fair', 'moderate', 'poor', 'very poor', 'extremely poor'] }
   };
   const COMPASS = {
     de: ['N','NNO','NO','ONO','O','OSO','SO','SSO','S','SSW','SW','WSW','W','WNW','NW','NNW'],
@@ -35,7 +35,7 @@
     },
     wind_kmh: (v) => nf1.format(v), gust_kmh: (v) => nf1.format(v),
     dir_deg: (v) => nf0.format(v), pm10_ugm3: (v) => nf0.format(v), no2_ugm3: (v) => nf0.format(v),
-    pollen_m3: (v) => nf0.format(v), pm25_ugm3: (v) => nf0.format(v)
+    pollen_m3: (v) => nf0.format(v), pm25_ugm3: (v) => nf0.format(v), o3_ugm3: (v) => nf0.format(v), so2_ugm3: (v) => nf1.format(v)
   };
   const AVG_FMT = (v, f) => (v == null ? '—' : f === 'dir_deg' ? nf0.format(v) : nf1.format(v));
 
@@ -58,10 +58,18 @@
   const gaugeVal = document.getElementById('wv-gauge-val');
   const rowMarks = Array.from(stage.querySelectorAll('[data-f]'));
   const avgMarks = Array.from(stage.querySelectorAll('[data-avg]'));
+  const maxMarks = Array.from(stage.querySelectorAll('[data-max]'));
+  const needEls = Array.from(stage.querySelectorAll('[data-need]'));
   const langBtns = Array.from(hud.querySelectorAll('.wv-lang'));
+  // the spinning arc slides from one language dot to the next instead of jumping
+  const langInd = hud.querySelector('.wv-lang-ind');
+  function updateLangInd() {
+    const b = langBtns.find((x) => x.dataset.lang === lang);
+    if (b) langInd.style.transform = `translateX(${b.offsetLeft}px)`;
+  }
 
   // ---------- state ----------
-  const S = { wind: 3, gust: 5, dirX: 0.4, dirY: 0, flowSign: 1, aq: 0.25, pollen: 0, spores: 0, gauge: 0, dirA: 0 };
+  const S = { wind: 3, gust: 5, dirX: 0.4, dirY: 0, flowSign: 1, aqN: 0.25, aqP: 0.25, pollen: 0, spores: 0, gauge: 0, dirA: 0 };
   const T = Object.assign({}, S);
   const G = { windN: 0, turb: 0, amp: 0.3, wid: 1 };
   let rows = [], idx = 0, page = 0, playing = false;   // playing = replay of the last 48 h, otherwise live
@@ -76,7 +84,9 @@
     T.dirX = -Math.sin(a);
     T.dirY = Math.cos(a);
     T.flowSign = T.dirX >= -0.05 ? 1 : -1;
-    T.aq = clamp(Math.max(num(r.pm10_ugm3) / 50, num(r.no2_ugm3) / 100), 0, 1.2);
+    // 1 = upper end of 'moderate' in the European Air Quality Index (NO₂ 120, PM10 50, PM2.5 25 µg/m³)
+    T.aqN = clamp(num(r.no2_ugm3) / 120, 0, 1.2);
+    T.aqP = clamp(Math.max(num(r.pm10_ugm3) / 50, num(r.pm25_ugm3) / 25), 0, 1.2);
     T.pollen = num(r.pollen_m3);
     T.spores = num(r.pm25_ugm3);   // fine dust drifts as light-blue specks
     // shortest way round for the direction marker
@@ -101,8 +111,10 @@
       rimAmt: lerpN(a.rimAmt, b.rimAmt, f), irid: lerpN(a.irid, b.irid, f), part: lerpN(a.part, b.part, f), op: lerpN(a.op, b.op, f) };
   }
   function palTarget() {
-    if (page === 2) return S.aq < 0.5 ? mixPal(PAL.good, PAL.mid, S.aq / 0.5) : mixPal(PAL.mid, PAL.bad, clamp((S.aq - 0.5) / 0.5, 0, 1));
-    if (page === 3) return PAL.pollen;
+    const aqPal = (q) => (q < 0.5 ? mixPal(PAL.good, PAL.mid, q / 0.5) : mixPal(PAL.mid, PAL.bad, clamp((q - 0.5) / 0.5, 0, 1)));
+    if (page === 2) return aqPal(S.aqN);
+    if (page === 3) return aqPal(S.aqP);
+    if (page === 4) return PAL.pollen;
     return PAL.wind;
   }
   let PC = mixPal(PAL.wind, PAL.wind, 0);
@@ -462,8 +474,9 @@
   const A0 = -150 * Math.PI / 180, SWEEP = Math.PI;
   gaugeTrack.setAttribute('d', arcGen({ startAngle: A0, endAngle: A0 + SWEEP }));
   function gaugeTarget() {
-    if (page === 2) return clamp(T.aq, 0.02, 1);
-    if (page === 3) return clamp(T.pollen / 80, 0.02, 1);
+    if (page === 2) return clamp(T.aqN, 0.02, 1);
+    if (page === 3) return clamp(T.aqP, 0.02, 1);
+    if (page === 4) return clamp(T.pollen / 80, 0.02, 1);
     return 0;
   }
   // The ring rides on the cloth's centre line at position hudU (0…1 along the cloth) and slowly
@@ -509,10 +522,11 @@
   function setPage(i) {
     page = i;
     lastPage = performance.now();
+    updateLangInd();
     titleCard.classList.toggle('is-on', page === 0);
     hud.classList.toggle('is-on', page !== 0);
     pageEls.forEach((el) => el.classList.toggle('is-on', Number(el.dataset.page) === page));
-    pgBtn.textContent = `${page + 1}/4`;
+    pgBtn.textContent = `${page + 1}/${NPAGE}`;
     T.gauge = gaugeTarget();
     lastLang = lastPage;
     if (page === 0) {
@@ -523,7 +537,17 @@
     } else if (lang !== LANGS[0]) setLang(LANGS[0], false);
     dirty = true;
   }
-  pgBtn.addEventListener('click', () => setPage((page + 1) % 4));
+    // pages whose values the Open Data Hub does not have for this place are skipped
+  const PAGE_FIELDS = { 1: ['wind_kmh'], 2: ['no2_ugm3'], 3: ['pm10_ugm3', 'pm25_ugm3', 'o3_ugm3', 'so2_ugm3'], 4: ['pollen_m3'] };
+  function pageHasData(p) {
+    const f = PAGE_FIELDS[p];
+    return !f || rows.some((r) => f.some((k) => has(r[k])));
+  }
+  function nextPage() {
+    for (let k = 1; k <= NPAGE; k++) { const p = (page + k) % NPAGE; if (pageHasData(p)) return p; }
+    return 0;
+  }
+  pgBtn.addEventListener('click', () => setPage(nextPage()));
 
   // ---------- numbers ----------
   const tweens = new Map();
@@ -570,6 +594,31 @@
     compassEl.textContent = has(r.dir_deg) ? COMPASS[lang][Math.round(Number(r.dir_deg) / 22.5) % 16] : '—';
     nowLabEl.textContent = nowLabel();
     polTopEl.textContent = polTop(r);
+    eaqiEl.textContent = has(r.no2_ugm3) ? I18N[lang].eaqi[eaqiNo2(Number(r.no2_ugm3))] : '';
+    // air values may be older than the hour shown (the APPA feed lags): then the measurement time
+    const old = r.aq_time && r.aq_time !== r.time;
+    aqTimeEls.forEach((el) => { el.textContent = old ? ` · ${hf().format(new Date(r.aq_time))}` : ''; });
+    o3LabEl.textContent = has(r.o3_ugm3) && has(r.so2_ugm3) ? I18N[lang].o3so2 : has(r.so2_ugm3) ? I18N[lang].so2 : I18N[lang].o3;
+    updateNeeds(r);
+  }
+  // European Air Quality Index bands for hourly NO₂ (µg/m³)
+  const eaqiNo2 = (v) => [40, 90, 120, 230, 340].findIndex((b) => v <= b) === -1 ? 5 : [40, 90, 120, 230, 340].findIndex((b) => v <= b);
+  const eaqiEl = document.getElementById('wv-eaqi');
+  const aqTimeEls = Array.from(hud.querySelectorAll('.wv-aqtime'));
+  const o3LabEl = hud.querySelector('[data-i18n="o3so2"]');
+  o3LabEl.removeAttribute('data-i18n');
+  // a value the Open Data Hub has no data for shows no unit or label either:
+  // data-need="a b" shows the element if a or b exists, "a&b" only if both do; "avg.x" / "max.x" read the 48 h figures
+  function valueOf(key, r) {
+    const [src, f] = key.includes('.') ? key.split('.') : ['row', key];
+    const o = src === 'avg' ? avgRow : src === 'max' ? maxRow : r;
+    return o ? o[f] : null;
+  }
+  function updateNeeds(r) {
+    for (const el of needEls) {
+      const ok = el.dataset.need.split(' ').some((alt) => alt.split('&').every((k) => has(valueOf(k, r))));
+      el.hidden = !ok;
+    }
   }
 
   function showRow(i) {
@@ -587,8 +636,14 @@
     for (const el of rowMarks) { el.textContent = '—'; el._v = undefined; tweens.delete(el); }
     compassEl.textContent = '—';
     polTopEl.textContent = '—';
+    eaqiEl.textContent = '';
+    updateNeeds({});
   }
-  let avgRow = null;
+  let avgRow = null, maxRow = null;
+  function computeMax(rs) {
+    const mx = (k) => { const v = rs.filter((r) => has(r[k])).map((r) => Number(r[k])); return v.length ? Math.max(...v) : null; };
+    return { no2_ugm3: mx('no2_ugm3'), pollen_m3: mx('pollen_m3') };
+  }
   function computeAvg(rs) {
     // mean of every hour that has a value (one decimal); wind direction as a vector mean in whole degrees
     const avg = (k) => {
@@ -598,12 +653,16 @@
     const rad = rs.filter((r) => has(r.dir_deg)).map((r) => Number(r.dir_deg) * Math.PI / 180);
     const sx = rad.reduce((a, b) => a + Math.sin(b), 0), cx = rad.reduce((a, b) => a + Math.cos(b), 0);
     const dir = rad.length ? Math.round((Math.atan2(sx, cx) * 180 / Math.PI + 360) % 360) : null;
-    return { wind_kmh: avg('wind_kmh'), dir_deg: dir, pm10_ugm3: avg('pm10_ugm3'), no2_ugm3: avg('no2_ugm3'), pm25_ugm3: avg('pm25_ugm3'), pollen_m3: avg('pollen_m3') };
+    return { wind_kmh: avg('wind_kmh'), dir_deg: dir, no2_ugm3: avg('no2_ugm3'), pm10_ugm3: avg('pm10_ugm3'), pm25_ugm3: avg('pm25_ugm3'), o3_ugm3: avg('o3_ugm3'), so2_ugm3: avg('so2_ugm3'), pollen_m3: avg('pollen_m3') };
   }
   function showAvg() {
     for (const el of avgMarks) {
       const f = el.getAttribute('data-avg');
       el.textContent = avgRow ? AVG_FMT(avgRow[f], f) : '—';
+    }
+    for (const el of maxMarks) {
+      const f = el.getAttribute('data-max');
+      el.textContent = maxRow && has(maxRow[f]) ? fmtField(f, maxRow[f]) : '—';
     }
   }
 
@@ -642,6 +701,7 @@
     stage.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = I18N[lang][el.dataset.i18n] || el.textContent; });
     titleSub.textContent = I18N[lang].subT.replace('{p}', placeName());
     langBtns.forEach((b) => b.classList.toggle('is-on', b.dataset.lang === lang));
+    updateLangInd();
     applyModeLabels();
     if (rows.length) paintRow(rows[idx], null);   // a running count-up keeps going in the new language
     showAvg();
@@ -678,11 +738,11 @@
     if (playing && rows.length > 1 && now - lastRow > STEP_ROW) {
       if (idx + 1 >= rows.length) setPlaying(false); else showRow(idx + 1);
     }
-    if (now - lastPage > PAGE_MS[page]) setPage((page + 1) % 4);
+    if (now - lastPage > PAGE_MS[page]) setPage(nextPage());
     else if (page !== 0 && now - lastLang > LANG_MS) { lastLang = now; setLang(LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length], true); }
 
     const k = reduce ? 1 : 1 - Math.exp(-dt / 1.6);
-    for (const key of ['wind', 'gust', 'dirX', 'dirY', 'aq', 'pollen', 'spores', 'dirA']) S[key] += (T[key] - S[key]) * k;
+    for (const key of ['wind', 'gust', 'dirX', 'dirY', 'aqN', 'aqP', 'pollen', 'spores', 'dirA']) S[key] += (T[key] - S[key]) * k;
     S.flowSign += (T.flowSign - S.flowSign) * (reduce ? 1 : 1 - Math.exp(-dt / 2.4));
     S.gauge += (T.gauge - S.gauge) * (reduce ? 1 : 1 - Math.exp(-dt / 0.7));
     PC = mixPal(PC, palTarget(), reduce ? 1 : 1 - Math.exp(-dt / 1.3));
@@ -826,11 +886,11 @@
     for (const ch of big) { const sp = document.createElement('span'); sp.textContent = ch; flagEl.appendChild(sp); }
     flagLetters = Array.from(flagEl.children);
     langsEl.textContent = '';
-    LANGS.filter((x) => x !== l).forEach((x, i) => {
+    // the other languages, small – a word that equals the big one (or another small one) is left out
+    const seen = new Set([WORD[l]]);
+    LANGS.filter((x) => x !== l && !seen.has(WORD[x]) && seen.add(WORD[x])).forEach((x, i) => {
       if (i) langsEl.appendChild(document.createElement('i'));
-      const sp = document.createElement('span'); sp.setAttribute('lang', x);
-      const code = document.createElement('b'); code.textContent = x.toUpperCase();
-      sp.appendChild(code); sp.appendChild(document.createTextNode(WORD[x]));
+      const sp = document.createElement('span'); sp.setAttribute('lang', x); sp.textContent = WORD[x];
       langsEl.appendChild(sp);
     });
     const first = l === 'de' ? place.de : place.it, second = l === 'de' ? place.it : place.de;
@@ -863,9 +923,14 @@
       showPlace(j.station);
       rows = j.rows || [];
       avgRow = rows.length ? computeAvg(rows) : null;
+      maxRow = rows.length ? computeMax(rows) : null;
+      if (!pageHasData(page)) setPage(nextPage());
       showAvg();
       mWind.textContent = `${j.station.de}${j.station.alt ? ` (${j.station.alt} m)` : ''}`;
-      mAir.textContent = j.air ? `${j.air.name} · ${String(j.air.km).replace('.', ',')} km` : 'keine Messstelle';
+      const AQN = { no2: 'NO₂', pm10: 'PM10', pm25: 'PM2.5', o3: 'O₃', so2: 'SO₂' };
+      mAir.textContent = j.air && j.air.length
+        ? j.air.map((a) => `${a.name} · ${String(a.km).replace('.', ',')} km (${a.values.map((v) => AQN[v]).join(', ')})`).join(' / ')
+        : 'keine Messstelle im Umkreis von 30 km';
       mTime.textContent = stamp.format(new Date(j.latest));
       chartState = 'ok';
       drawTimeline();

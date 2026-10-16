@@ -3,7 +3,8 @@
 // Open Data Hub South Tyrol (https://opendatahub.com):
 //   GET /api/stations          active weather stations that measure wind
 //   GET /api/wind?station=…    last 48 h, hourly: wind, gusts, direction,
-//                              PM10 / NO₂ / PM2.5 (nearest APPA station),
+//                              NO₂ / PM10 / PM2.5 / O₃ / SO₂ (for each the nearest
+//                              APPA station within 30 km that measures it),
 //                              pollen (CAMS model via Open-Meteo, ODH has none)
 
 const ODH = 'https://mobility.api.opendatahub.com/v2/flat';
@@ -11,7 +12,10 @@ const POLLEN_API = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 const HOURS = 48;
 const H = 3600 * 1000;
 const POLLEN_TYPES = ['alder', 'birch', 'grass', 'mugwort', 'olive', 'ragweed'];
-const AQ_TYPES = { pm10: 'PM10 - Polveri sottili', no2: 'NO2 - Ossidi di azoto', pm25: 'PM2.5 - Polveri sottili' };
+const AQ_TYPES = { no2: 'NO2 - Ossidi di azoto', pm10: 'PM10 - Polveri sottili', pm25: 'PM2.5 - Polveri sottili', o3: 'O3 - Ozono', so2: 'SO2 - Biossido di zolfo' };
+const AQ_KEYS = Object.keys(AQ_TYPES);
+const AQ_MAX_KM = 30;      // farther stations say little about the chosen place
+const AQ_HOLD_H = 12;      // the APPA feed often lags by several hours: show the last value up to 12 h
 
 export default {
   async fetch(request, env, ctx) {
@@ -135,13 +139,12 @@ async function wind(code) {
   const pol = pollenRes.status === 'fulfilled' ? pollenRes.value : null;
 
   const rows = [];
-  const carry = { pm10: null, no2: null, pm25: null, age: { pm10: 99, no2: 99, pm25: 99 } };
-  // walk a few hours before the window so air values can be carried forward
-  for (let h = lastHour - (HOURS + 1) * H; h <= lastHour; h += H) {
+  // last measured air value per pollutant, carried forward with the hour it was measured
+  const carry = Object.fromEntries(AQ_KEYS.map((k) => [k, { v: null, t: null }]));
+  // walk the hours before the window too, so values can be carried into it
+  for (let h = lastHour - (HOURS + AQ_HOLD_H) * H; h <= lastHour; h += H) {
     const a = airData && airData.byHour.get(h);
-    for (const k of ['pm10', 'no2', 'pm25']) {
-      if (a && a[k] != null) { carry[k] = a[k]; carry.age[k] = 0; } else carry.age[k]++;
-    }
+    for (const k of AQ_KEYS) if (a && a[k] != null) carry[k] = { v: a[k], t: h };
     if (h <= lastHour - HOURS * H) continue;
     const b = buckets.get(h);
     const speeds = b ? b.s.map((x) => x.v) : [];
@@ -159,16 +162,21 @@ async function wind(code) {
       dir = (Math.atan2(sx, cy) * 180 / Math.PI + 360) % 360;
     }
     const p = pol && pol.byHour.get(h);
-    // air values stay valid for up to 3 hours (the APPA feed lags behind)
-    const aq = (k) => (carry.age[k] <= 3 ? carry[k] : null);
+    const fresh = (k) => carry[k].t != null && h - carry[k].t <= AQ_HOLD_H * H;
+    const aq = (k) => (fresh(k) ? carry[k].v : null);
+    // hour of the newest air value shown in this row (null: none)
+    const aqTimes = AQ_KEYS.filter(fresh).map((k) => carry[k].t);
     rows.push({
       time: iso(h),
       wind_kmh: round(ws == null ? null : ws * 3.6),
       gust_kmh: round(gust == null ? null : gust * 3.6),
       dir_deg: dir == null ? null : Math.round(dir),
-      pm10_ugm3: round(aq('pm10')),
       no2_ugm3: round(aq('no2')),
+      pm10_ugm3: round(aq('pm10')),
       pm25_ugm3: round(aq('pm25')),
+      o3_ugm3: round(aq('o3')),
+      so2_ugm3: round(aq('so2')),
+      aq_time: aqTimes.length ? iso(Math.max(...aqTimes)) : null,
       pollen_m3: p ? round(p.total, 0) : null,
       pollen_top: p ? p.top : null
     });
@@ -177,7 +185,7 @@ async function wind(code) {
   return {
     station: st,
     latest: iso(latest),
-    air: airData ? airData.station : null,
+    air: airData ? airData.stations : [],
     pollen: pol ? { source: 'CAMS Europe via Open-Meteo', model: true } : null,
     generated: iso(now),
     rows
@@ -189,25 +197,34 @@ async function air(st, from, to) {
   const cands = list.data
     .filter((s) => s.scoordinate && s.scoordinate.y > 40)
     .map((s) => ({ code: s.scode, name: s.sname, km: distKm(st, { lat: s.scoordinate.y, lon: s.scoordinate.x }) }))
+    .filter((c) => c.km <= AQ_MAX_KM)
     .sort((a, b) => a.km - b.km);
+  if (!cands.length) return null;
   const types = Object.values(AQ_TYPES).map(q).join(',');
-  // nearest station that actually delivered values in the window
-  for (const c of cands.slice(0, 4)) {
-    const d = await getJSON(`${ODH}/EnvironmentStation/${types}/${from}/${to}?limit=-1&where=scode.eq.${q(`"${c.code}"`)},mperiod.eq.3600&select=tname,mvalue,mvalidtime`);
-    if (!d.data || !d.data.length) continue;
-    const byHour = new Map();
-    for (const m of d.data) {
-      const h = Math.floor(odhTime(m.mvalidtime) / H) * H, v = Number(m.mvalue);
-      if (!Number.isFinite(v)) continue;
-      const k = Object.keys(AQ_TYPES).find((x) => AQ_TYPES[x] === m.tname);
-      if (!k) continue;
-      let r = byHour.get(h);
-      if (!r) byHour.set(h, (r = {}));
-      r[k] = v;
-    }
-    return { station: { code: c.code, name: c.name, km: round(c.km) }, byHour };
+  const d = await getJSON(`${ODH}/EnvironmentStation/${types}/${from}/${to}?limit=-1&where=scode.in.(${cands.map((c) => c.code).join(',')}),mperiod.eq.3600&select=scode,tname,mvalue,mvalidtime`);
+  // per station and pollutant: hour → value
+  const got = new Map();
+  for (const m of d.data || []) {
+    const k = AQ_KEYS.find((x) => AQ_TYPES[x] === m.tname), v = Number(m.mvalue);
+    if (!k || !Number.isFinite(v)) continue;
+    const key = `${m.scode}|${k}`;
+    if (!got.has(key)) got.set(key, new Map());
+    got.get(key).set(Math.floor(odhTime(m.mvalidtime) / H) * H, v);
   }
-  return null;
+  // each pollutant from the nearest station that actually delivered it
+  const byHour = new Map(), used = new Map();
+  for (const k of AQ_KEYS) {
+    const c = cands.find((x) => got.has(`${x.code}|${k}`));
+    if (!c) continue;
+    for (const [h, v] of got.get(`${c.code}|${k}`)) {
+      if (!byHour.has(h)) byHour.set(h, {});
+      byHour.get(h)[k] = v;
+    }
+    if (!used.has(c.code)) used.set(c.code, { code: c.code, name: c.name, km: round(c.km), values: [] });
+    used.get(c.code).values.push(k);
+  }
+  if (!used.size) return null;
+  return { stations: [...used.values()], byHour };
 }
 
 async function pollen(st) {

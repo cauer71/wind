@@ -91,10 +91,15 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
 .wv-t-subwrap { display: grid; justify-items: center; margin-top: max(10px, calc(var(--wv-k) * 24px)); max-width: 80%; }
 .wv-t-subwrap > .wv-t-sub { grid-area: 1 / 1; margin: 0; max-width: none; }
 .wv-lang { position: relative; }
-.wv-lang::before { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 1.2px solid transparent; opacity: 0; transition: opacity .4s ease; }
-.wv-lang.is-on::before { opacity: 1; border-top-color: #fff; border-right-color: rgba(255,255,255,.75); border-bottom-color: rgba(255,255,255,.35); }
+/* one spinning arc that slides from dot to dot when the language changes */
+.wv-langs { position: relative; }
+.wv-lang-ind { position: absolute; left: 0; top: 0; width: 13px; height: 13px; pointer-events: none; transition: transform 1.4s cubic-bezier(.45, 0, .2, 1); }
+.wv-lang-ind i { position: absolute; inset: -3px; border-radius: 50%; border: 1.2px solid transparent; border-top-color: #fff; border-right-color: rgba(255,255,255,.75); border-bottom-color: rgba(255,255,255,.35); }
 @media (prefers-reduced-motion: no-preference) {
-  .wv-lang.is-on::before { animation: wvSpin 2s linear infinite; }
+  .wv-lang-ind i { animation: wvSpin 2s linear infinite; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wv-lang-ind { transition: none; }
 }
 @keyframes wvSpin { to { transform: rotate(360deg); } }
 
@@ -160,5 +165,7 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
 .wv-stage.is-full .wv-credit { left: 24px; bottom: 20px; font-size: 13px; }
 html.wv-noscroll, html.wv-noscroll body { overflow: hidden; }
 
-/* title card: the two smaller languages carry their language code */
-.wv-t-langs b { font-weight: 600; opacity: .5; margin-right: .6em; letter-spacing: .2em; }
+
+/* values the Open Data Hub has no data for: no unit, no label */
+.wv [hidden] { display: none !important; }
+.wv-aqtime { opacity: .75; }
