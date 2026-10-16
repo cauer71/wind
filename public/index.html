@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wind Südtirol</title>
+<meta name="description" content="Live-Wind, Luftqualität und Pollen für Orte in Südtirol – als animiertes Seidenband. Daten: Open Data Hub Südtirol.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2305060b'/%3E%3Cpath d='M5 13c5-5 9 3 14-1s7-2 8 0M5 20c5-4 9 3 14-1s6-2 8 0' fill='none' stroke='%23e5ec3f' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wv-page-wrap">
+<div class="wv" id="wv-root">
+  <header class="wv-head">
+    <div class="wv-head-text">
+      <h1 id="wv-title">Wind Bozen</h1>
+      <p id="wv-take">Ein Seidenband zeigt Wind, Luft und Pollen – live aus dem Open Data Hub Südtirol.</p>
+    </div>
+    <div class="wv-loc">
+      <label for="wv-station">Ort</label>
+      <select class="wv-select" id="wv-station" aria-label="Messstation wählen">
+        <option value="83200MS">Bozen</option>
+      </select>
+      <button class="wv-btn" id="wv-near" type="button" title="Nächstgelegene Station verwenden">In meiner Nähe</button>
+    </div>
+  </header>
+
+  <ul class="wv-meta" id="wv-meta">
+    <li>Wind: <b id="wv-m-wind">—</b></li>
+    <li>Luft: <b id="wv-m-air">—</b></li>
+    <li>Stand: <b id="wv-m-time">—</b></li>
+  </ul>
+  <p class="wv-err" id="wv-err" role="status"></p>
+
+  <section class="wv-stage" id="wind-stage">
+    <div class="wv-canvas-box" id="wv-canvas-box">
+      <canvas class="wv-canvas" id="wv-canvas" aria-label="Animiertes Windband"></canvas>
+      <div class="wv-vignette"></div>
+
+      <div class="wv-top">
+        <span class="wv-time" data-f="time">—</span>
+        <span class="wv-sample wv-live" id="wv-mode" data-i18n="live">Live</span>
+        <button class="wv-play" id="wv-play" type="button">Verlauf abspielen</button>
+      </div>
+
+      <div class="wv-title is-on" id="wv-titlecard">
+        <div class="wv-t-kicker" id="wv-kicker">Bozen · Bolzano</div>
+        <div class="wv-t-big" id="wv-flag" aria-label="WIND"><span>W</span><span>I</span><span>N</span><span>D</span></div>
+        <div class="wv-t-langs"><span>Wind</span><i></i><span>Vento</span><i></i><span>Wind</span></div>
+        <div class="wv-t-subwrap"><div class="wv-t-sub" data-i18n="sub">Wind, Luft und Pollen über Bozen</div></div>
+      </div>
+
+      <div class="wv-hud" id="wind-hud">
+        <svg class="wv-ring" viewBox="-120 -120 240 240" aria-hidden="true">
+          <defs>
+            <radialGradient id="wvHudBg"><stop offset="0" stop-color="#14164a" stop-opacity=".26"/><stop offset=".7" stop-color="#14164a" stop-opacity=".14"/><stop offset="1" stop-color="#14164a" stop-opacity="0"/></radialGradient>
+            <linearGradient id="wvGauge" gradientUnits="userSpaceOnUse" x1="0" y1="110" x2="0" y2="-110"><stop offset="0" stop-color="#e5ec3f"/><stop offset="1" stop-color="#f29a3a"/></linearGradient>
+          </defs>
+          <circle r="108" fill="url(#wvHudBg)"/>
+          <circle r="100" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="1.1" stroke-dasharray="0.01 3.1" stroke-linecap="round"/>
+          <line x1="0" y1="91" x2="0" y2="96" stroke="rgba(255,255,255,.75)" stroke-width="1"/>
+          <g class="wv-fade" id="wv-dirmark"><path d="M0 -91 L-4.5 -99 L4.5 -99 Z" fill="#e5ec3f"/></g>
+          <g class="wv-fade" id="wv-gaugeg" opacity="0"><path id="wv-gauge-track" fill="rgba(255,255,255,.14)"/><path id="wv-gauge-val" fill="url(#wvGauge)"/></g>
+        </svg>
+        <div class="wv-hud-body">
+          <div class="wv-page" data-page="1">
+            <div class="wv-h-title" data-i18n="windTitle">Windgeschwindigkeit</div>
+            <div class="wv-h-lab wv-h-lab1 wv-nowlab">Jetzt</div>
+            <div class="wv-h-main">
+              <b class="wv-h-big wv-tw" data-f="wind_kmh">—</b>
+              <div class="wv-h-side"><b>KM/H</b><span class="wv-h-sub"><span data-f="dir_deg">—</span>° <span id="wv-compass">—</span></span></div>
+            </div>
+            <div class="wv-h-lab wv-h-lab2"><span data-i18n="gust">Böen</span> · <span data-i18n="avgLong">Mittel 48 h</span></div>
+            <div class="wv-h-pair">
+              <span class="wv-h-val"><span data-f="gust_kmh">—</span> KM/H</span><i></i>
+              <span class="wv-h-val"><span data-avg="wind_kmh">—</span> KM/H</span>
+            </div>
+          </div>
+          <div class="wv-page" data-page="2">
+            <div class="wv-h-title" data-i18n="airTitle">Luftqualität</div>
+            <div class="wv-h-lab wv-h-lab1" data-i18n="pm10">Feinstaub PM10</div>
+            <div class="wv-h-main">
+              <b class="wv-h-big wv-tw" data-f="pm10_ugm3">—</b>
+              <div class="wv-h-side"><b>µG/M³</b><span class="wv-h-sub">NO₂ <span data-f="no2_ugm3">—</span></span></div>
+            </div>
+            <div class="wv-h-lab wv-h-lab2" data-i18n="avgLong">Mittel 48 h</div>
+            <div class="wv-h-pair">
+              <span class="wv-h-val"><span data-avg="pm10_ugm3">—</span><span class="wv-h-unit">PM10</span></span><i></i>
+              <span class="wv-h-val"><span data-avg="no2_ugm3">—</span><span class="wv-h-unit">NO₂</span></span>
+            </div>
+          </div>
+          <div class="wv-page" data-page="3">
+            <div class="wv-h-title" data-i18n="polTitle">Pollen und Feinstaub</div>
+            <div class="wv-h-lab wv-h-lab1" data-i18n="pollen">Pollen</div>
+            <div class="wv-h-main">
+              <b class="wv-h-big wv-tw" data-f="pollen_m3">—</b>
+              <div class="wv-h-side"><b>/M³</b><span class="wv-h-sub" id="wv-poltop">—</span></div>
+            </div>
+            <div class="wv-h-lab wv-h-lab2" data-i18n="avgLong">Mittel 48 h</div>
+            <div class="wv-h-pair">
+              <span class="wv-h-val"><span data-avg="pollen_m3">—</span><span class="wv-h-unit" data-i18n="pollen">Pollen</span></span><i></i>
+              <span class="wv-h-val"><span data-avg="pm25_ugm3">—</span><span class="wv-h-unit">PM2.5</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="wv-hud-foot">
+          <div class="wv-langs"><button class="wv-lang is-on" type="button" data-lang="de">DE</button><button class="wv-lang" type="button" data-lang="it">IT</button><button class="wv-lang" type="button" data-lang="en">EN</button></div>
+          <button class="wv-pgn" id="wv-pg" type="button">1/4</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wv-card" id="wind-timeline">
+    <h2>Verlauf der letzten 48 Stunden</h2>
+    <p class="wv-note">Wind (Stundenmittel) und stärkste Böe in km/h. Die Linie markiert die Stunde, die das Band gerade zeigt – klicken springt zu einer Stunde.</p>
+    <div class="wv-chart" id="wv-chart"></div>
+  </section>
+
+  <section class="wv-card" id="wind-key">
+    <h2>So liest man das Band</h2>
+    <p class="wv-note">Nachempfunden der Installation „Wind“ (Atmospheres, Hyperview im Torre Glòries, Barcelona).</p>
+    <ul class="wv-key">
+      <li><strong>Wellen</strong> Windgeschwindigkeit – je stärker der Wind, desto schneller und höher wogt das Tuch.</li>
+      <li><strong>Flattern</strong> Böen – je größer der Abstand zum Mittelwind, desto unruhiger kräuselt sich der Stoff.</li>
+      <li><strong>Richtung</strong> Ostwind lässt das Tuch nach links ziehen, Westwind nach rechts; Nord/Süd neigt es.</li>
+      <li><strong>Farbe</strong> Lavendel bei Wind, bei Luftqualität von Türkis (gut) über Gold (mäßig) bis Rosé (schlecht), Blau bei Pollen.</li>
+      <li><strong>Punkte</strong> Pollen (gelb) und Feinstaub PM2.5 (hellblau) schweben im Raum, ihre Anzahl folgt der Konzentration.</li>
+      <li><strong>Grafik</strong> Der Ring reitet auf dem Tuch und wandert langsam mit dem Wind über das Band; er wechselt durch vier Seiten, jede auf Deutsch, Italienisch und Englisch.</li>
+    </ul>
+  </section>
+
+  <p class="wv-foot" id="wv-foot">
+    Daten: <a href="https://opendatahub.com" target="_blank" rel="noopener">Open Data Hub Südtirol</a> – Wind von den Wetterstationen des Landes (SIAG / Hydrographisches Amt),
+    Luftqualität von der Landesagentur für Umwelt (APPA, nächstgelegene Messstelle). Pollen sind Modellwerte (CAMS Europe über Open-Meteo), weil der Open Data Hub keine Pollendaten führt.
+  </p>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
