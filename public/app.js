@@ -294,7 +294,8 @@
   function resize() {
     const w = box.clientWidth;
     if (!w) return;
-    const h = Math.round(clamp(w * 0.45, 300, 600));
+    // in fullscreen the ribbon fills the whole screen, otherwise a wide band
+    const h = isFull() ? Math.max(300, Math.round(window.innerHeight)) : Math.round(clamp(w * 0.45, 300, 600));
     if (w === W && h === H) return;
     W = w; H = h; aspect = W / H;
     dpr = Math.min(window.devicePixelRatio || 1, 1.75);
@@ -302,10 +303,50 @@
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     if (ctx2d) ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
     stage.style.setProperty('--wv-k', String(W / 1000));
-    hudScale = clamp(W / 1050, 0.6, 1.15);
+    hudScale = isFull() ? clamp(Math.min(W / 1050, H / 520), 0.6, 1.6) : clamp(W / 1050, 0.6, 1.15);
     hudPos.init = false;
   }
   if (window.ResizeObserver) new ResizeObserver(resize).observe(box);
+  window.addEventListener('resize', resize);
+
+  // ---------- fullscreen ----------
+  // native fullscreen where the browser has it (desktop, Android, iPad); on iPhone the stage
+  // covers the viewport instead
+  const fsBtn = document.getElementById('wv-fs');
+  const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+  const canNativeFs = !!(stage.requestFullscreen || stage.webkitRequestFullscreen);
+  function isFull() { return fsEl() === stage || stage.classList.contains('wv-fs'); }
+  function setFull(on) {
+    if (on === isFull()) return;
+    if (canNativeFs) {
+      if (on) {
+        const r = (stage.requestFullscreen || stage.webkitRequestFullscreen).call(stage);
+        if (r && r.catch) r.catch(() => { stage.classList.add('wv-fs'); onFullChange(); });
+      } else if (fsEl()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else { stage.classList.remove('wv-fs'); onFullChange(); }
+    } else {
+      stage.classList.toggle('wv-fs', on);
+      document.documentElement.classList.toggle('wv-noscroll', on);
+      onFullChange();
+    }
+  }
+  function onFullChange() {
+    const on = isFull();
+    stage.classList.toggle('is-full', on);
+    fsBtn.setAttribute('aria-pressed', String(on));
+    fsBtn.title = on ? 'Vollbild beenden (F / Esc)' : 'Vollbild (F)';
+    W = 0; resize();
+  }
+  document.addEventListener('fullscreenchange', onFullChange);
+  document.addEventListener('webkitfullscreenchange', onFullChange);
+  const toggleFull = () => { const on = !isFull(); setFull(on); if (on && window.wvSound) window.wvSound.gesture(); };
+  fsBtn.addEventListener('click', toggleFull);
+  stage.addEventListener('dblclick', (ev) => { if (!ev.target.closest('button, select, a')) toggleFull(); });
+  document.addEventListener('keydown', (ev) => {
+    if (ev.target.closest && ev.target.closest('input, select, textarea')) return;
+    if ((ev.key === 'f' || ev.key === 'F') && !ev.metaKey && !ev.ctrlKey && !ev.altKey) toggleFull();
+    else if (ev.key === 'Escape' && stage.classList.contains('wv-fs')) setFull(false);
+  });
 
   // ---------- rendering ----------
   const POL_COL = [1.0, 0.86, 0.45], SPO_COL = [0.72, 0.93, 1.0];

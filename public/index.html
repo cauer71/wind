@@ -41,7 +41,15 @@
         <span class="wv-time" data-f="time">—</span>
         <span class="wv-sample wv-live" id="wv-mode" data-i18n="live">Live</span>
         <button class="wv-play" id="wv-play" type="button">Verlauf abspielen</button>
+        <button class="wv-play wv-icon" id="wv-sound" type="button" aria-pressed="false" title="Musik ein">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3v10L5 10H2z" fill="currentColor"/><path class="wv-on" d="M11 5.5c1 .8 1.5 1.6 1.5 2.5s-.5 1.7-1.5 2.5M12.6 3.8c1.6 1.2 2.4 2.6 2.4 4.2s-.8 3-2.4 4.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path class="wv-off" d="M11 6l4 4m0-4l-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </button>
+        <button class="wv-play wv-icon" id="wv-fs" type="button" aria-pressed="false" title="Vollbild (F)">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path class="wv-on" d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path class="wv-off" d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
       </div>
+
+      <p class="wv-credit" id="wv-credit">♪ 'Ephemera' by Scott Buckley - released under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC-BY 4.0</a>. <a href="https://www.scottbuckley.com.au" target="_blank" rel="noopener">www.scottbuckley.com.au</a></p>
 
       <div class="wv-title is-on" id="wv-titlecard">
         <div class="wv-t-kicker" id="wv-kicker">Bozen · Bolzano</div>
@@ -132,11 +140,13 @@
 
   <p class="wv-foot" id="wv-foot">
     Daten: <a href="https://opendatahub.com" target="_blank" rel="noopener">Open Data Hub Südtirol</a> – Wind von den Wetterstationen des Landes (SIAG / Hydrographisches Amt),
-    Luftqualität von der Landesagentur für Umwelt (APPA, nächstgelegene Messstelle). Pollen sind Modellwerte (CAMS Europe über Open-Meteo), weil der Open Data Hub keine Pollendaten führt.
+    Luftqualität von der Landesagentur für Umwelt (APPA, nächstgelegene Messstelle). Pollen sind Modellwerte (CAMS Europe über Open-Meteo), weil der Open Data Hub keine Pollendaten führt.<br>
+    Musik: 'Ephemera' by Scott Buckley - released under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC-BY 4.0</a>. <a href="https://www.scottbuckley.com.au" target="_blank" rel="noopener">www.scottbuckley.com.au</a>
   </p>
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="sound.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -4,9 +4,12 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "test": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "d3": "7.9.0",
     "wrangler": "4.151.1"
   }
 }

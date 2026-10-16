@@ -4,6 +4,10 @@ compatibility_date = "2026-09-01"
 account_id = "c72e13538d36f6905581747d2fd5c1fc"
 workers_dev = true
 
+routes = [
+  { pattern = "wind.auer.page", custom_domain = true }
+]
+
 [assets]
 directory = "./public"
 binding = "ASSETS"
