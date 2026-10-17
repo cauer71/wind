@@ -91,10 +91,15 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
 .wv-t-subwrap { display: grid; justify-items: center; margin-top: max(10px, calc(var(--wv-k) * 24px)); max-width: 80%; }
 .wv-t-subwrap > .wv-t-sub { grid-area: 1 / 1; margin: 0; max-width: none; }
 .wv-lang { position: relative; }
-.wv-lang::before { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 1.2px solid transparent; opacity: 0; transition: opacity .4s ease; }
-.wv-lang.is-on::before { opacity: 1; border-top-color: #fff; border-right-color: rgba(255,255,255,.75); border-bottom-color: rgba(255,255,255,.35); }
+/* one spinning arc that slides from dot to dot when the language changes */
+.wv-langs { position: relative; }
+.wv-lang-ind { position: absolute; left: 0; top: 0; width: 13px; height: 13px; pointer-events: none; transition: transform 1.4s cubic-bezier(.45, 0, .2, 1); }
+.wv-lang-ind i { position: absolute; inset: -3px; border-radius: 50%; border: 1.2px solid transparent; border-top-color: #fff; border-right-color: rgba(255,255,255,.75); border-bottom-color: rgba(255,255,255,.35); }
 @media (prefers-reduced-motion: no-preference) {
-  .wv-lang.is-on::before { animation: wvSpin 2s linear infinite; }
+  .wv-lang-ind i { animation: wvSpin 2s linear infinite; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wv-lang-ind { transition: none; }
 }
 @keyframes wvSpin { to { transform: rotate(360deg); } }
 
@@ -133,3 +138,34 @@ body { background: var(--color-bg); color: var(--color-fg); font-family: var(--f
 .wv-is-loading .wv-canvas-box, .wv-is-loading .wv-chart { opacity: .55; transition: opacity .4s; }
 .wv-foot { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
 .wv-foot a { color: inherit; }
+
+/* sound & fullscreen buttons */
+.wv-top .wv-play + .wv-play { margin-left: 0; }
+.wv-icon { width: 26px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.wv-icon svg { width: 13px; height: 13px; }
+.wv-icon .wv-off { display: none; }
+#wv-sound[aria-pressed="false"] .wv-on { display: none; }
+#wv-sound[aria-pressed="false"] .wv-off { display: inline; }
+#wv-fs[aria-pressed="true"] .wv-on { display: none; }
+#wv-fs[aria-pressed="true"] .wv-off { display: inline; }
+#wv-sound.is-waiting { animation: wvPulse 2.4s ease-in-out infinite; }
+@keyframes wvPulse { 50% { background: rgba(229,236,63,.22); border-color: rgba(229,236,63,.6); } }
+
+/* soundtrack credit: fades in at the start, then out */
+.wv-credit { position: absolute; left: 16px; bottom: 12px; right: 16px; margin: 0; z-index: 3; font-size: 11px; letter-spacing: .04em; color: rgba(238,240,255,.82); text-shadow: 0 0 8px rgba(0,0,0,.6); opacity: 0; transition: opacity 1.6s ease; pointer-events: none; }
+.wv-credit.is-on { opacity: 1; pointer-events: auto; }
+.wv-credit a { color: inherit; }
+
+/* fullscreen */
+.wv-stage:fullscreen { border-radius: 0; border: 0; width: 100vw; height: 100vh; }
+.wv-stage:-webkit-full-screen { border-radius: 0; border: 0; width: 100vw; height: 100vh; }
+.wv-stage.wv-fs { position: fixed; inset: 0; z-index: 1000; border-radius: 0; border: 0; height: 100dvh; }
+.wv-stage.is-full .wv-canvas-box { height: 100% !important; }
+.wv-stage.is-full .wv-top { padding: 18px 24px; font-size: 13px; }
+.wv-stage.is-full .wv-credit { left: 24px; bottom: 20px; font-size: 13px; }
+html.wv-noscroll, html.wv-noscroll body { overflow: hidden; }
+
+
+/* values the Open Data Hub has no data for: no unit, no label */
+.wv [hidden] { display: none !important; }
+.wv-aqtime { opacity: .75; }

@@ -1,0 +1,45 @@
+{
+  "source": "Open Data Hub Südtirol · MeteoStation (SIAG)",
+  "stations": [
+    {
+      "code": "61690SF",
+      "de": "Abtei Piz La Ila",
+      "it": "Badia Piz La Ila",
+      "alt": null,
+      "lat": 46.565,
+      "lon": 11.9036
+    },
+    {
+      "code": "83200MS",
+      "de": "Bozen",
+      "it": "Bolzano",
+      "alt": null,
+      "lat": 46.4977,
+      "lon": 11.3128
+    },
+    {
+      "code": "39100MS",
+      "de": "Brixen - Vahrn",
+      "it": "Bressanone",
+      "alt": null,
+      "lat": 46.731,
+      "lon": 11.6451
+    },
+    {
+      "code": "59700MS",
+      "de": "Bruneck",
+      "it": "Brunico",
+      "alt": null,
+      "lat": 46.8043,
+      "lon": 11.9315
+    },
+    {
+      "code": "23200MS",
+      "de": "Meran",
+      "it": "Merano",
+      "alt": null,
+      "lat": 46.688,
+      "lon": 11.1366
+    }
+  ]
+}
