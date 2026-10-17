@@ -601,6 +601,43 @@
     aqTimeEls.forEach((el) => { el.textContent = old ? ` · ${hf().format(new Date(r.aq_time))}` : ''; });
     o3LabEl.textContent = has(r.o3_ugm3) && has(r.so2_ugm3) ? I18N[lang].o3so2 : has(r.so2_ugm3) ? I18N[lang].so2 : I18N[lang].o3;
     updateNeeds(r);
+    paintValues(r);
+  }
+  // ---------- all values on the main page ----------
+  const valsEl = document.getElementById('wv-vals'), valsTimeEl = document.getElementById('wv-vals-time');
+  const dfVal = new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
+  const nfV1 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 }), nfV0 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
+  const POL_DE = { alder: 'Erle', birch: 'Birke', grass: 'Gräser', mugwort: 'Beifuß', olive: 'Olive', ragweed: 'Ambrosia' };
+  const EAQI_DE = ['gut', 'mittelmäßig', 'mäßig', 'schlecht', 'sehr schlecht', 'extrem schlecht'];
+  function paintValues(r) {
+    const air = r.aq_time && r.aq_time !== r.time ? `Messung ${dfVal.format(new Date(r.aq_time))}` : '';
+    const items = [
+      ['Wind', r.wind_kmh, 'km/h', nfV1],
+      ['Böen', r.gust_kmh, 'km/h', nfV1],
+      ['Windrichtung', r.dir_deg, '°', nfV0, has(r.dir_deg) ? COMPASS.de[Math.round(Number(r.dir_deg) / 22.5) % 16] : ''],
+      ['Stickstoffdioxid NO₂', r.no2_ugm3, 'µg/m³', nfV0, [has(r.no2_ugm3) ? EAQI_DE[eaqiNo2(Number(r.no2_ugm3))] : '', air].filter(Boolean).join(' · ')],
+      ['Feinstaub PM10', r.pm10_ugm3, 'µg/m³', nfV0, air],
+      ['Feinstaub PM2.5', r.pm25_ugm3, 'µg/m³', nfV0, air],
+      ['Ozon O₃', r.o3_ugm3, 'µg/m³', nfV0, air],
+      ['Schwefeldioxid SO₂', r.so2_ugm3, 'µg/m³', nfV1, air],
+      ['Pollen', r.pollen_m3, '/m³', nfV0, has(r.pollen_m3) ? (r.pollen_top ? POL_DE[r.pollen_top] : 'kaum Pollen') : '']
+    ];
+    valsEl.textContent = '';
+    for (const [label, v, unit, nf, sub] of items) {
+      const box = document.createElement('div'); box.className = 'wv-val';
+      const dt = document.createElement('dt'); dt.textContent = label;
+      const dd = document.createElement('dd');
+      if (has(v)) {
+        dd.textContent = nf.format(Number(v));
+        const u = document.createElement('small'); u.textContent = unit; dd.appendChild(u);
+        if (sub) { const sb = document.createElement('span'); sb.className = 'wv-val-sub'; sb.textContent = sub; dd.appendChild(sb); }
+      } else {
+        // no data in the Open Data Hub: no number, no unit
+        box.classList.add('is-empty'); dd.textContent = 'keine Daten';
+      }
+      box.appendChild(dt); box.appendChild(dd); valsEl.appendChild(box);
+    }
+    valsTimeEl.textContent = rows.length && idx === rows.length - 1 ? `jetzt · ${dfVal.format(new Date(r.time))}` : dfVal.format(new Date(r.time));
   }
   // European Air Quality Index bands for hourly NO₂ (µg/m³)
   const eaqiNo2 = (v) => [40, 90, 120, 230, 340].findIndex((b) => v <= b) === -1 ? 5 : [40, 90, 120, 230, 340].findIndex((b) => v <= b);

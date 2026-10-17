@@ -194,3 +194,17 @@ test('when the air feed has stopped, the live view skips the air pages and says 
   await gotoPage(page, 3);
   await expect(page.locator('#wv-pg')).toHaveText('3/5');
 });
+
+test('main page lists all values; missing ones without unit', async ({ page }) => {
+  await page.goto('/');
+  const vals = page.locator('#wv-vals');
+  await expect(vals.locator('.wv-val')).toHaveCount(9);
+  await expect(vals).toContainText('Stickstoffdioxid NO₂41µg/m³mittelmäßig');
+  await expect(vals).toContainText('Schwefeldioxid SO₂1,4µg/m³');
+  await page.unroute('**/api/wind**');
+  await page.route('**/api/wind**', (r) => r.fulfill({ path: path.join(here, 'fixtures', 'wind-noair.json'), contentType: 'application/json' }));
+  await page.goto('/');
+  const no2 = page.locator('.wv-val', { hasText: 'NO₂' });
+  await expect(no2).toHaveClass(/is-empty/);
+  await expect(no2).not.toContainText('µg/m³');
+});
