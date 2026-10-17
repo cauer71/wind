@@ -169,3 +169,13 @@ html.wv-noscroll, html.wv-noscroll body { overflow: hidden; }
 /* values the Open Data Hub has no data for: no unit, no label */
 .wv [hidden] { display: none !important; }
 .wv-aqtime { opacity: .75; }
+
+/* all values on the main page */
+.wv-vals-time { font-weight: 400; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-left: 6px; }
+.wv-vals { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr)); gap: var(--cds-gap-md); margin: 0; }
+.wv-val { border-top: 1px solid var(--color-border-line); padding-top: 8px; min-width: 0; }
+.wv-val dt { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.wv-val dd { margin: 2px 0 0; font-family: var(--font-anthropic-serif); font-size: 26px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.wv-val dd small { font-family: var(--font-anthropic-sans); font-size: 12px; color: var(--color-fg-muted); margin-left: 4px; }
+.wv-val .wv-val-sub { display: block; font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: 2px; }
+.wv-val.is-empty dd { font-family: var(--font-anthropic-sans); font-size: 13px; color: var(--color-fg-muted); padding-top: 8px; }
