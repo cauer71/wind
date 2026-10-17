@@ -539,9 +539,10 @@
   }
     // pages whose values the Open Data Hub does not have for this place are skipped
   const PAGE_FIELDS = { 1: ['wind_kmh'], 2: ['no2_ugm3'], 3: ['pm10_ugm3', 'pm25_ugm3', 'o3_ugm3', 'so2_ugm3'], 4: ['pollen_m3'] };
+  // judged by the hour on show: an empty page is skipped, e.g. when the APPA feed has stopped
   function pageHasData(p) {
-    const f = PAGE_FIELDS[p];
-    return !f || rows.some((r) => f.some((k) => has(r[k])));
+    const f = PAGE_FIELDS[p], r = rows[idx];
+    return !f || (!!r && f.some((k) => has(r[k])));
   }
   function nextPage() {
     for (let k = 1; k <= NPAGE; k++) { const p = (page + k) % NPAGE; if (pageHasData(p)) return p; }
@@ -631,6 +632,7 @@
     T.gauge = gaugeTarget();
     dirty = true;
     updateCursor();
+    if (!pageHasData(page)) setPage(nextPage());
   }
   function clearRowMarks() {
     for (const el of rowMarks) { el.textContent = '—'; el._v = undefined; tweens.delete(el); }
@@ -931,6 +933,10 @@
       mAir.textContent = j.air && j.air.length
         ? j.air.map((a) => `${a.name} · ${String(a.km).replace('.', ',')} km (${a.values.map((v) => AQN[v]).join(', ')})`).join(' / ')
         : 'keine Messstelle im Umkreis von 30 km';
+      const newest = rows[rows.length - 1];
+      if (j.air_latest && newest && !['no2_ugm3', 'pm10_ugm3', 'pm25_ugm3', 'o3_ugm3', 'so2_ugm3'].some((k) => has(newest[k]))) {
+        mAir.textContent += ` – keine aktuellen Daten im Open Data Hub, letzte Messung ${stamp.format(new Date(j.air_latest))}`;
+      }
       mTime.textContent = stamp.format(new Date(j.latest));
       chartState = 'ok';
       drawTimeline();

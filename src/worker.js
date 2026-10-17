@@ -186,6 +186,8 @@ async function wind(code) {
     station: st,
     latest: iso(latest),
     air: airData ? airData.stations : [],
+    // newest air measurement at all (the APPA feed in the Open Data Hub sometimes stops for a day)
+    air_latest: airData && airData.byHour.size ? iso(Math.max(...airData.byHour.keys())) : null,
     pollen: pol ? { source: 'CAMS Europe via Open-Meteo', model: true } : null,
     generated: iso(now),
     rows

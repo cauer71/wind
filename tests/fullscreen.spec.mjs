@@ -174,3 +174,23 @@ test('the language arc slides between the dots instead of jumping', async ({ pag
   expect(samples.at(-1)).toBe(it);
   await expect.poll(() => ind.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m41)).toBe(it);
 });
+
+test('when the air feed has stopped, the live view skips the air pages and says so', async ({ page }) => {
+  const fs = await import('node:fs');
+  const j = JSON.parse(fs.readFileSync(path.join(here, 'fixtures', 'wind.json'), 'utf8'));
+  // the last 10 hours without air values, as when the APPA feed in the Open Data Hub stops
+  for (const r of j.rows.slice(-10)) for (const k of ['no2_ugm3', 'pm10_ugm3', 'pm25_ugm3', 'o3_ugm3', 'so2_ugm3', 'aq_time']) r[k] = null;
+  j.air_latest = '2026-10-16T08:00:00Z';
+  await page.unroute('**/api/wind**');
+  await page.route('**/api/wind**', (r) => r.fulfill({ body: JSON.stringify(j), contentType: 'application/json' }));
+  await page.goto('/');
+  await expect(page.locator('#wv-m-air')).toContainText('keine aktuellen Daten im Open Data Hub, letzte Messung');
+  await gotoPage(page, 1);
+  await expect(page.locator('#wv-pg')).toHaveText('2/5');
+  await gotoPage(page, 1);
+  await expect(page.locator('#wv-pg')).toHaveText('5/5');   // NO₂ and PM pages skipped
+  // replaying an hour that had air data brings the pages back
+  await page.evaluate(() => document.getElementById('wv-play').click());
+  await gotoPage(page, 3);
+  await expect(page.locator('#wv-pg')).toHaveText('3/5');
+});
