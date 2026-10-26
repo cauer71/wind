@@ -184,7 +184,7 @@ test('when the air feed has stopped, the live view skips the air pages and says 
   await page.unroute('**/api/wind**');
   await page.route('**/api/wind**', (r) => r.fulfill({ body: JSON.stringify(j), contentType: 'application/json' }));
   await page.goto('/');
-  await expect(page.locator('#wv-m-air')).toContainText('keine aktuellen Daten im Open Data Hub, letzte Messung');
+  await expect(page.locator('#wv-m-air')).toContainText('keine aktuellen Messdaten, letzte Messung');
   await gotoPage(page, 1);
   await expect(page.locator('#wv-pg')).toHaveText('2/5');
   await gotoPage(page, 1);

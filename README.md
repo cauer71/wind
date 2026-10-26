@@ -23,9 +23,10 @@ Luftqualität und Pollen – jetzt mit Live-Daten und frei wählbarem Ort in Sü
 
 | Wert | Quelle |
 | --- | --- |
-| Wind, Böen, Richtung | Open Data Hub Südtirol – `MeteoStation` (Wetterstationen des Landes, 10-Minuten-Werte, zu Stundenwerten gemittelt) |
-| PM10, NO₂, PM2.5 | Open Data Hub Südtirol – `EnvironmentStation`, Herkunft APPA Bozen; die nächstgelegene aktive Messstelle wird automatisch gewählt |
-| Pollen | CAMS Europe über Open-Meteo (Modellwerte) – der Open Data Hub führt keine Pollendaten |
+| Wind, Böen, Richtung | Wetterdienst des Landes Südtirol – `geoservices.buergernetz.bz.it/services/meteo/v1` (10-Minuten-Werte, zu Stundenwerten gemittelt) |
+| NO₂, PM10, PM2.5, O₃, SO₂ | Landesagentur für Umwelt (APPA) – `dati.retecivica.bz.it/services/airquality`; je Wert die nächste Messstelle im Umkreis von 30 km |
+| Ersatz | Fällt ein Landesdienst aus, kommen die Werte aus dem Open Data Hub Südtirol (`MeteoStation`, `EnvironmentStation`) |
+| Pollen | CAMS Europe über Open-Meteo (Modellwerte) – dafür gibt es keine Messdaten |
 
 ## Aufbau
 
@@ -44,6 +45,6 @@ Station zum Standort des Browsers.
 ```sh
 npm install
 npx wrangler dev        # lokal
-npm test                # Playwright-Tests (Vollbild, Autorenhinweis) mit Testdaten, ohne Netz
+npm test                # Worker-Tests (Datenquellen) und Playwright-Tests, mit Testdaten, ohne Netz
 CLOUDFLARE_API_TOKEN=… npx wrangler deploy
 ```

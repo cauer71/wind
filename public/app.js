@@ -1,4 +1,4 @@
-// Wind Südtirol – silk ribbon driven by live data from /api/wind (Open Data Hub Südtirol)
+// Wind Südtirol – silk ribbon driven by live data from /api/wind (open data of the Province of Bolzano)
 (function () {
   const TAU = Math.PI * 2, CAMZ = 3.0;
   // every page runs once in each language: 3 × 5 s
@@ -537,7 +537,7 @@
     } else if (lang !== LANGS[0]) setLang(LANGS[0], false);
     dirty = true;
   }
-    // pages whose values the Open Data Hub does not have for this place are skipped
+    // pages whose values the data sources do not have for this place are skipped
   const PAGE_FIELDS = { 1: ['wind_kmh'], 2: ['no2_ugm3'], 3: ['pm10_ugm3', 'pm25_ugm3', 'o3_ugm3', 'so2_ugm3'], 4: ['pollen_m3'] };
   // judged by the hour on show: an empty page is skipped, e.g. when the APPA feed has stopped
   function pageHasData(p) {
@@ -632,7 +632,7 @@
         const u = document.createElement('small'); u.textContent = unit; dd.appendChild(u);
         if (sub) { const sb = document.createElement('span'); sb.className = 'wv-val-sub'; sb.textContent = sub; dd.appendChild(sb); }
       } else {
-        // no data in the Open Data Hub: no number, no unit
+        // no data from the sources: no number, no unit
         box.classList.add('is-empty'); dd.textContent = 'keine Daten';
       }
       box.appendChild(dt); box.appendChild(dd); valsEl.appendChild(box);
@@ -645,7 +645,7 @@
   const aqTimeEls = Array.from(hud.querySelectorAll('.wv-aqtime'));
   const o3LabEl = hud.querySelector('[data-i18n="o3so2"]');
   o3LabEl.removeAttribute('data-i18n');
-  // a value the Open Data Hub has no data for shows no unit or label either:
+  // a value the sources have no data for shows no unit or label either:
   // data-need="a b" shows the element if a or b exists, "a&b" only if both do; "avg.x" / "max.x" read the 48 h figures
   function valueOf(key, r) {
     const [src, f] = key.includes('.') ? key.split('.') : ['row', key];
@@ -966,13 +966,15 @@
       if (!pageHasData(page)) setPage(nextPage());
       showAvg();
       mWind.textContent = `${j.station.de}${j.station.alt ? ` (${j.station.alt} m)` : ''}`;
+      if (j.sources && j.sources.wind) mWind.title = `Quelle: ${j.sources.wind}`;
+      if (j.sources && j.sources.air) mAir.title = `Quelle: ${j.sources.air}`;
       const AQN = { no2: 'NO₂', pm10: 'PM10', pm25: 'PM2.5', o3: 'O₃', so2: 'SO₂' };
       mAir.textContent = j.air && j.air.length
         ? j.air.map((a) => `${a.name} · ${String(a.km).replace('.', ',')} km (${a.values.map((v) => AQN[v]).join(', ')})`).join(' / ')
         : 'keine Messstelle im Umkreis von 30 km';
       const newest = rows[rows.length - 1];
       if (j.air_latest && newest && !['no2_ugm3', 'pm10_ugm3', 'pm25_ugm3', 'o3_ugm3', 'so2_ugm3'].some((k) => has(newest[k]))) {
-        mAir.textContent += ` – keine aktuellen Daten im Open Data Hub, letzte Messung ${stamp.format(new Date(j.air_latest))}`;
+        mAir.textContent += ` – keine aktuellen Messdaten, letzte Messung ${stamp.format(new Date(j.air_latest))}`;
       }
       mTime.textContent = stamp.format(new Date(j.latest));
       chartState = 'ok';
