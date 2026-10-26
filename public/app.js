@@ -321,9 +321,33 @@
     stage.style.setProperty('--wv-k', String(W / 1000));
     hudScale = isFull() ? clamp(Math.min(W / 1050, H / 520), 0.6, 1.6) : clamp(W / 1050, 0.6, 1.15);
     hudPos.init = false;
+    if (waves) waves.resize(W, H, dpr);
+    wavesDirty = true;
   }
   if (window.ResizeObserver) new ResizeObserver(resize).observe(box);
   window.addEventListener('resize', resize);
+
+  // ---------- second animation: soft silk waves ----------
+  // The wind ribbon ('silk') or a calm loop of silk waves ('waves', waves.js) fills the stage; the switch
+  // cross-fades the two canvases, and both are drawn only while one is visible or fading.
+  const wavesCanvas = document.getElementById('wv-waves');
+  const animBtn = document.getElementById('wv-anim');
+  const FADE_MS = 1300;
+  let waves = null, wavesDirty = true, animMode = 'silk', fadeUntil = 0;
+  try { waves = typeof window.createWaves === 'function' ? window.createWaves(wavesCanvas, {}) : null; } catch (e) { waves = null; }
+  if (!waves) { animBtn.hidden = true; wavesCanvas.remove(); }
+  function setAnim(mode, instant) {
+    if (!waves) mode = 'silk';
+    if (mode === animMode && !instant) return;
+    animMode = mode;
+    fadeUntil = instant ? 0 : performance.now() + FADE_MS;
+    stage.classList.toggle('is-waves', mode === 'waves');
+    animBtn.setAttribute('aria-pressed', String(mode === 'waves'));
+    animBtn.title = mode === 'waves' ? 'Animation wechseln: Windband (A)' : 'Animation wechseln: Wellen (A)';
+    try { localStorage.setItem('wind-anim', mode); } catch (e) { /* private mode */ }
+    hudPos.init = false; wavesDirty = true; dirty = true;
+  }
+  animBtn.addEventListener('click', () => setAnim(animMode === 'waves' ? 'silk' : 'waves'));
 
   // ---------- fullscreen ----------
   // native fullscreen where the browser has it (desktop, Android, iPad); on iPhone the stage
@@ -361,6 +385,7 @@
   document.addEventListener('keydown', (ev) => {
     if (ev.target.closest && ev.target.closest('input, select, textarea')) return;
     if ((ev.key === 'f' || ev.key === 'F') && !ev.metaKey && !ev.ctrlKey && !ev.altKey) toggleFull();
+    else if ((ev.key === 'a' || ev.key === 'A') && !ev.metaKey && !ev.ctrlKey && !ev.altKey && waves) setAnim(animMode === 'waves' ? 'silk' : 'waves');
     else if (ev.key === 'Escape' && stage.classList.contains('wv-fs')) setFull(false);
   });
 
@@ -505,8 +530,9 @@
     } else {
       hudU = 0.5;
     }
+    if (animMode === 'waves') edge = 1;
     hudIn.style.opacity = edge.toFixed(3);
-    const p = proj(P(hudU, 0, MAIN));
+    const p = animMode === 'waves' ? [W * 0.5, H * 0.5] : proj(P(hudU, 0, MAIN));   // waves: in the dark eye at the centre
     const loY = r + 34, hiY = H - r - 40;
     const tx = p[0];
     const ty = loY > hiY ? H / 2 : clamp(p[1], loY, hiY);
@@ -799,9 +825,15 @@
     } else if (dirty) {
       stepParticles(0);
     }
-    if (W && dirty) {
+    const fading = now < fadeUntil;
+    if (W && dirty && (animMode === 'silk' || fading)) {
       if (gl) renderGL(); else if (ctx2d) render2d();
       if (reduce) dirty = false;
+    }
+    if (W && waves && (animMode === 'waves' || fading) && (!reduce || wavesDirty)) {
+      // the loop is exactly 10 s long; the time is reduced here so the shader never sees large numbers
+      waves.render(reduce ? 0 : (now / 1000) % 10);
+      wavesDirty = false;
     }
     updateHud(dt);
     waveFlag(dt);
@@ -1049,6 +1081,10 @@
   const urlCode = new URL(location.href).searchParams.get('station');
   const startCode = (urlCode && /^[0-9A-Z]{5,8}$/.test(urlCode) ? urlCode : null) || store.get('wind-station') || '83200MS';
   applyModeLabels();
+  const urlAnim = new URL(location.href).searchParams.get('anim');
+  let storedAnim = null;
+  try { storedAnim = localStorage.getItem('wind-anim'); } catch (e) { /* private mode */ }
+  setAnim(urlAnim === 'wellen' || urlAnim === 'waves' ? 'waves' : urlAnim === 'band' || urlAnim === 'silk' ? 'silk' : storedAnim === 'waves' ? 'waves' : 'silk', true);
   setPage(0);
   requestAnimationFrame((t) => { last = t; requestAnimationFrame(frame); });
   load(startCode, false);
