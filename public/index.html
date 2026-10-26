@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Wind Südtirol</title>
-<meta name="description" content="Live-Wind, Luftqualität und Pollen für Orte in Südtirol – als animiertes Seidenband. Daten: Open Data Hub Südtirol.">
+<meta name="description" content="Live-Wind, Luftqualität und Pollen für Orte in Südtirol – als animiertes Seidenband. Daten: Wetterdienst und Umweltagentur des Landes Südtirol.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2305060b'/%3E%3Cpath d='M5 13c5-5 9 3 14-1s7-2 8 0M5 20c5-4 9 3 14-1s6-2 8 0' fill='none' stroke='%23e5ec3f' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -14,7 +14,7 @@
   <header class="wv-head">
     <div class="wv-head-text">
       <h1 id="wv-title">Wind Bozen</h1>
-      <p id="wv-take">Ein Seidenband zeigt Wind, Luft und Pollen – live aus dem Open Data Hub Südtirol.</p>
+      <p id="wv-take">Ein Seidenband zeigt Wind, Luft und Pollen – live aus den offenen Daten des Landes Südtirol.</p>
     </div>
     <div class="wv-loc">
       <label for="wv-station">Ort</label>
@@ -153,13 +153,15 @@
       <li><strong>Richtung</strong> Ostwind lässt das Tuch nach links ziehen, Westwind nach rechts; Nord/Süd neigt es.</li>
       <li><strong>Farbe</strong> Lavendel bei Wind; bei NO₂ und Feinstaub von Türkis (gut) über Gold (mäßig) bis Rosé (schlecht), Blau bei Pollen.</li>
       <li><strong>Punkte</strong> Pollen (gelb) und Feinstaub PM2.5 (hellblau) schweben im Raum, ihre Anzahl folgt der Konzentration.</li>
-      <li><strong>Grafik</strong> Der Ring reitet auf dem Tuch und wandert langsam mit dem Wind über das Band; er wechselt durch Titel, Wind, Stickstoffdioxid, Feinstaub/Ozon und Pollen, jede Seite auf Deutsch, Italienisch und Englisch. Seiten ohne Daten im Open Data Hub werden übersprungen.</li>
+      <li><strong>Grafik</strong> Der Ring reitet auf dem Tuch und wandert langsam mit dem Wind über das Band; er wechselt durch Titel, Wind, Stickstoffdioxid, Feinstaub/Ozon und Pollen, jede Seite auf Deutsch, Italienisch und Englisch. Seiten ohne Daten werden übersprungen.</li>
     </ul>
   </section>
 
   <p class="wv-foot" id="wv-foot">
-    Daten: <a href="https://opendatahub.com" target="_blank" rel="noopener">Open Data Hub Südtirol</a> – Wind von den Wetterstationen des Landes (SIAG / Hydrographisches Amt),
-    Luftqualität (NO₂, PM10, PM2.5, O₃, SO₂) von der Landesagentur für Umwelt (APPA), je Wert die nächste Messstelle im Umkreis von 30 km; die Uhrzeit neben dem Wert ist die letzte Messung. Pollen sind Modellwerte (CAMS Europe über Open-Meteo), weil der Open Data Hub keine Pollendaten führt.<br>
+    Daten: Wind von den Wetterstationen des Landes über den <a href="https://wetter.provinz.bz.it" target="_blank" rel="noopener">Wetterdienst Südtirol</a> (10-Minuten-Werte, zu Stunden gemittelt);
+    Luftqualität (NO₂, PM10, PM2.5, O₃, SO₂) von der <a href="https://umwelt.provinz.bz.it/luft.asp" target="_blank" rel="noopener">Landesagentur für Umwelt (APPA)</a>, je Wert die nächste Messstelle im Umkreis von 30 km;
+    beides über die offenen Datendienste des Landes, bei deren Ausfall ersatzweise aus dem <a href="https://opendatahub.com" target="_blank" rel="noopener">Open Data Hub Südtirol</a>.
+    Die Uhrzeit neben einem Luftwert ist die letzte Messung. Pollen sind Modellwerte (CAMS Europe über Open-Meteo), da es dafür keine Messdaten gibt.<br>
     Musik: 'Ephemera' by Scott Buckley - released under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC-BY 4.0</a>. <a href="https://www.scottbuckley.com.au" target="_blank" rel="noopener">www.scottbuckley.com.au</a>
   </p>
 </div>
