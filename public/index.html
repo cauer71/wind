@@ -35,12 +35,16 @@
   <section class="wv-stage" id="wind-stage">
     <div class="wv-canvas-box" id="wv-canvas-box">
       <canvas class="wv-canvas" id="wv-canvas" aria-label="Animiertes Windband"></canvas>
+      <canvas class="wv-canvas wv-waves" id="wv-waves" aria-label="Animierte Seidenwellen"></canvas>
       <div class="wv-vignette"></div>
 
       <div class="wv-top">
         <span class="wv-time" data-f="time">—</span>
         <span class="wv-sample wv-live" id="wv-mode" data-i18n="live">Live</span>
         <button class="wv-play" id="wv-play" type="button">Verlauf abspielen</button>
+        <button class="wv-play wv-icon" id="wv-anim" type="button" aria-pressed="false" title="Animation wechseln: Wellen (A)">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 6.5c2-2.4 4-2.4 6.5 0s4.5 2.4 6.5 0M1.5 10.5c2-2.4 4-2.4 6.5 0s4.5 2.4 6.5 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </button>
         <button class="wv-play wv-icon" id="wv-sound" type="button" aria-pressed="false" title="Musik ein">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3v10L5 10H2z" fill="currentColor"/><path class="wv-on" d="M11 5.5c1 .8 1.5 1.6 1.5 2.5s-.5 1.7-1.5 2.5M12.6 3.8c1.6 1.2 2.4 2.6 2.4 4.2s-.8 3-2.4 4.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path class="wv-off" d="M11 6l4 4m0-4l-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         </button>
@@ -153,6 +157,7 @@
       <li><strong>Richtung</strong> Ostwind lässt das Tuch nach links ziehen, Westwind nach rechts; Nord/Süd neigt es.</li>
       <li><strong>Farbe</strong> Lavendel bei Wind; bei NO₂ und Feinstaub von Türkis (gut) über Gold (mäßig) bis Rosé (schlecht), Blau bei Pollen.</li>
       <li><strong>Punkte</strong> Pollen (gelb) und Feinstaub PM2.5 (hellblau) schweben im Raum, ihre Anzahl folgt der Konzentration.</li>
+      <li><strong>Wellen</strong> Mit dem Wellen-Knopf (oder Taste A) wechselt das Band zu ruhig fließender dunkler Seide – eine 10-Sekunden-Schleife ohne Bezug zu den Daten; der Ring ruht dann in der Mitte.</li>
       <li><strong>Grafik</strong> Der Ring reitet auf dem Tuch und wandert langsam mit dem Wind über das Band; er wechselt durch Titel, Wind, Stickstoffdioxid, Feinstaub/Ozon und Pollen, jede Seite auf Deutsch, Italienisch und Englisch. Seiten ohne Daten werden übersprungen.</li>
     </ul>
   </section>
@@ -167,6 +172,7 @@
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="waves.js"></script>
 <script src="sound.js"></script>
 <script src="app.js"></script>
 </body>

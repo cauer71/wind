@@ -321,9 +321,62 @@
     stage.style.setProperty('--wv-k', String(W / 1000));
     hudScale = isFull() ? clamp(Math.min(W / 1050, H / 520), 0.6, 1.6) : clamp(W / 1050, 0.6, 1.15);
     hudPos.init = false;
+    if (waves) waves.resize(W, H, window.devicePixelRatio || 1);   // waves.js caps its own pixel budget
+    wavesDirty = true;
   }
   if (window.ResizeObserver) new ResizeObserver(resize).observe(box);
   window.addEventListener('resize', resize);
+
+  // ---------- second animation: soft silk waves ----------
+  // The wind ribbon ('silk') or a calm loop of silk waves ('waves', waves.js) fills the stage; the switch
+  // cross-fades the two canvases, and both are drawn only while one is visible or fading.
+  const wavesCanvas = document.getElementById('wv-waves');
+  const animBtn = document.getElementById('wv-anim');
+  const FADE_MS = 1300;
+  let waves = null, wavesDirty = true, animMode = 'silk', fadeUntil = 0;
+  try { waves = typeof window.createWaves === 'function' ? window.createWaves(wavesCanvas, {}) : null; } catch (e) { waves = null; }
+  if (!waves) { animBtn.hidden = true; wavesCanvas.remove(); }
+  function setAnim(mode, instant) {
+    if (!waves) mode = 'silk';
+    if (mode === animMode && !instant) return;
+    animMode = mode;
+    fadeUntil = instant ? 0 : performance.now() + FADE_MS;
+    stage.classList.toggle('is-waves', mode === 'waves');
+    animBtn.setAttribute('aria-pressed', String(mode === 'waves'));
+    animBtn.title = mode === 'waves' ? 'Animation wechseln: Windband (A)' : 'Animation wechseln: Wellen (A)';
+    try { localStorage.setItem('wind-anim', mode); } catch (e) { /* private mode */ }
+    hudPos.init = false; wavesDirty = true; dirty = true;
+  }
+  animBtn.addEventListener('click', () => setAnim(animMode === 'waves' ? 'silk' : 'waves'));
+
+  // frame-time governor for the waves (from the waves prototype): the median of the first 60 frame
+  // intervals is the display's own rate; at >= 40 Hz, if most of 120 frames are slower than
+  // max(21 ms, 1.3 x that), the internal resolution drops by 15 % (not below 0.6, never back up).
+  // At a ~30 Hz baseline (throttled rAF, e.g. iOS Low Power Mode) it probes once at 0.7 and keeps
+  // it only if frames get clearly faster. Long gaps (hidden tab) are ignored.
+  const gov = { skip: 20, mode: 0, thr: 21, base: 0, q0: 1, n: 0, slow: 0, dts: new Float32Array(60), nd: 0 };
+  function governWaves(dt) {
+    if (!waves || !waves.setQuality || dt > 250) return;
+    if (gov.skip > 0) { gov.skip--; return; }
+    if (gov.mode === 0 || gov.mode === 2) {
+      gov.dts[gov.nd++] = dt;
+      if (gov.nd < gov.dts.length) return;
+      const m = gov.dts.slice().sort()[gov.nd >> 1]; gov.nd = 0;
+      if (gov.mode === 0) {
+        gov.base = m;
+        if (m < 25) { gov.mode = 1; gov.thr = Math.max(21, m * 1.3); }
+        else { gov.mode = 2; gov.q0 = waves.getQuality(); waves.setQuality(gov.q0 * 0.7); gov.skip = 20; }
+      } else if (m < 0.8 * gov.base) { gov.mode = 1; gov.thr = 21; }
+      else { waves.setQuality(gov.q0); gov.mode = 3; }
+      return;
+    }
+    if (gov.mode !== 1) return;
+    gov.n++; if (dt > gov.thr) gov.slow++;
+    if (gov.n >= 120) {
+      if (gov.slow > 72 && waves.getQuality() > 0.61) { waves.setQuality(Math.max(0.6, waves.getQuality() * 0.85)); gov.skip = 30; }
+      gov.n = 0; gov.slow = 0;
+    }
+  }
 
   // ---------- fullscreen ----------
   // native fullscreen where the browser has it (desktop, Android, iPad); on iPhone the stage
@@ -361,6 +414,7 @@
   document.addEventListener('keydown', (ev) => {
     if (ev.target.closest && ev.target.closest('input, select, textarea')) return;
     if ((ev.key === 'f' || ev.key === 'F') && !ev.metaKey && !ev.ctrlKey && !ev.altKey) toggleFull();
+    else if ((ev.key === 'a' || ev.key === 'A') && !ev.metaKey && !ev.ctrlKey && !ev.altKey && waves) setAnim(animMode === 'waves' ? 'silk' : 'waves');
     else if (ev.key === 'Escape' && stage.classList.contains('wv-fs')) setFull(false);
   });
 
@@ -505,8 +559,9 @@
     } else {
       hudU = 0.5;
     }
+    if (animMode === 'waves') edge = 1;
     hudIn.style.opacity = edge.toFixed(3);
-    const p = proj(P(hudU, 0, MAIN));
+    const p = animMode === 'waves' ? [W * 0.5, H * 0.5] : proj(P(hudU, 0, MAIN));   // waves: in the dark eye at the centre
     const loY = r + 34, hiY = H - r - 40;
     const tx = p[0];
     const ty = loY > hiY ? H / 2 : clamp(p[1], loY, hiY);
@@ -771,7 +826,8 @@
     });
   }
   function frame(now) {
-    const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+    const rawMs = now - last;
+    const dt = Math.min(0.05, Math.max(0, rawMs / 1000));
     last = now;
     // replay walks through the hours, then returns to live; pages and languages always rotate
     if (playing && rows.length > 1 && now - lastRow > STEP_ROW) {
@@ -799,9 +855,16 @@
     } else if (dirty) {
       stepParticles(0);
     }
-    if (W && dirty) {
+    const fading = now < fadeUntil;
+    if (W && dirty && (animMode === 'silk' || fading)) {
       if (gl) renderGL(); else if (ctx2d) render2d();
       if (reduce) dirty = false;
+    }
+    if (animMode === 'waves' && !fading && !reduce) governWaves(rawMs);
+    if (W && waves && (animMode === 'waves' || fading) && (!reduce || wavesDirty)) {
+      // the loop is exactly 10 s long; the time is reduced here so the shader never sees large numbers
+      waves.render(reduce ? 0 : (now / 1000) % 10);
+      wavesDirty = false;
     }
     updateHud(dt);
     waveFlag(dt);
@@ -1049,6 +1112,10 @@
   const urlCode = new URL(location.href).searchParams.get('station');
   const startCode = (urlCode && /^[0-9A-Z]{5,8}$/.test(urlCode) ? urlCode : null) || store.get('wind-station') || '83200MS';
   applyModeLabels();
+  const urlAnim = new URL(location.href).searchParams.get('anim');
+  let storedAnim = null;
+  try { storedAnim = localStorage.getItem('wind-anim'); } catch (e) { /* private mode */ }
+  setAnim(urlAnim === 'wellen' || urlAnim === 'waves' ? 'waves' : urlAnim === 'band' || urlAnim === 'silk' ? 'silk' : storedAnim === 'waves' ? 'waves' : 'silk', true);
   setPage(0);
   requestAnimationFrame((t) => { last = t; requestAnimationFrame(frame); });
   load(startCode, false);

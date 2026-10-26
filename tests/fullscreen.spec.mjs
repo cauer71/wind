@@ -208,3 +208,32 @@ test('main page lists all values; missing ones without unit', async ({ page }) =
   await expect(no2).toHaveClass(/is-empty/);
   await expect(no2).not.toContainText('µg/m³');
 });
+
+test('animation switch cross-fades to the silk waves, remembers the choice and centres the ring', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#wv-title')).toHaveText('Wind Bozen');
+  const stage = page.locator('#wind-stage');
+  const btn = page.locator('#wv-anim');
+  await expect(btn).toBeVisible();
+  await expect(stage).not.toHaveClass(/is-waves/);
+  await btn.click();
+  await expect(stage).toHaveClass(/is-waves/);
+  await expect(btn).toHaveAttribute('aria-pressed', 'true');
+  await expect.poll(() => page.locator('#wv-waves').evaluate((el) => +getComputedStyle(el).opacity)).toBe(1);
+  // the waves canvas has a drawing buffer matching the stage
+  const size = await page.locator('#wv-waves').evaluate((el) => ({ w: el.width, h: el.height, cw: el.clientWidth }));
+  expect(size.w).toBeGreaterThan(size.cw * 0.5);
+  // the ring rests in the centre of the stage (in the dark eye)
+  await gotoPage(page, 1);
+  await page.waitForTimeout(1500);
+  const box = await stage.boundingBox();
+  const ring = await page.locator('#wind-hud').evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m41);
+  expect(Math.abs(ring - box.width / 2)).toBeLessThan(box.width * 0.05);
+  // remembered after a reload, switchable with the A key
+  await page.reload();
+  await expect(stage).toHaveClass(/is-waves/);
+  await page.keyboard.press('a');
+  await expect(stage).not.toHaveClass(/is-waves/);
+  await page.goto('/?anim=wellen');
+  await expect(stage).toHaveClass(/is-waves/);
+});
