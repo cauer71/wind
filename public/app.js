@@ -321,7 +321,7 @@
     stage.style.setProperty('--wv-k', String(W / 1000));
     hudScale = isFull() ? clamp(Math.min(W / 1050, H / 520), 0.6, 1.6) : clamp(W / 1050, 0.6, 1.15);
     hudPos.init = false;
-    if (waves) waves.resize(W, H, dpr);
+    if (waves) waves.resize(W, H, window.devicePixelRatio || 1);   // waves.js caps its own pixel budget
     wavesDirty = true;
   }
   if (window.ResizeObserver) new ResizeObserver(resize).observe(box);
@@ -348,6 +348,35 @@
     hudPos.init = false; wavesDirty = true; dirty = true;
   }
   animBtn.addEventListener('click', () => setAnim(animMode === 'waves' ? 'silk' : 'waves'));
+
+  // frame-time governor for the waves (from the waves prototype): the median of the first 60 frame
+  // intervals is the display's own rate; at >= 40 Hz, if most of 120 frames are slower than
+  // max(21 ms, 1.3 x that), the internal resolution drops by 15 % (not below 0.6, never back up).
+  // At a ~30 Hz baseline (throttled rAF, e.g. iOS Low Power Mode) it probes once at 0.7 and keeps
+  // it only if frames get clearly faster. Long gaps (hidden tab) are ignored.
+  const gov = { skip: 20, mode: 0, thr: 21, base: 0, q0: 1, n: 0, slow: 0, dts: new Float32Array(60), nd: 0 };
+  function governWaves(dt) {
+    if (!waves || !waves.setQuality || dt > 250) return;
+    if (gov.skip > 0) { gov.skip--; return; }
+    if (gov.mode === 0 || gov.mode === 2) {
+      gov.dts[gov.nd++] = dt;
+      if (gov.nd < gov.dts.length) return;
+      const m = gov.dts.slice().sort()[gov.nd >> 1]; gov.nd = 0;
+      if (gov.mode === 0) {
+        gov.base = m;
+        if (m < 25) { gov.mode = 1; gov.thr = Math.max(21, m * 1.3); }
+        else { gov.mode = 2; gov.q0 = waves.getQuality(); waves.setQuality(gov.q0 * 0.7); gov.skip = 20; }
+      } else if (m < 0.8 * gov.base) { gov.mode = 1; gov.thr = 21; }
+      else { waves.setQuality(gov.q0); gov.mode = 3; }
+      return;
+    }
+    if (gov.mode !== 1) return;
+    gov.n++; if (dt > gov.thr) gov.slow++;
+    if (gov.n >= 120) {
+      if (gov.slow > 72 && waves.getQuality() > 0.61) { waves.setQuality(Math.max(0.6, waves.getQuality() * 0.85)); gov.skip = 30; }
+      gov.n = 0; gov.slow = 0;
+    }
+  }
 
   // ---------- fullscreen ----------
   // native fullscreen where the browser has it (desktop, Android, iPad); on iPhone the stage
@@ -797,7 +826,8 @@
     });
   }
   function frame(now) {
-    const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+    const rawMs = now - last;
+    const dt = Math.min(0.05, Math.max(0, rawMs / 1000));
     last = now;
     // replay walks through the hours, then returns to live; pages and languages always rotate
     if (playing && rows.length > 1 && now - lastRow > STEP_ROW) {
@@ -830,6 +860,7 @@
       if (gl) renderGL(); else if (ctx2d) render2d();
       if (reduce) dirty = false;
     }
+    if (animMode === 'waves' && !fading && !reduce) governWaves(rawMs);
     if (W && waves && (animMode === 'waves' || fading) && (!reduce || wavesDirty)) {
       // the loop is exactly 10 s long; the time is reduced here so the shader never sees large numbers
       waves.render(reduce ? 0 : (now / 1000) % 10);
