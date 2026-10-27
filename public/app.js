@@ -345,7 +345,7 @@
     animBtn.setAttribute('aria-pressed', String(mode === 'waves'));
     animBtn.title = mode === 'waves' ? 'Animation wechseln: Windband (A)' : 'Animation wechseln: Wellen (A)';
     try { localStorage.setItem('wind-anim', mode); } catch (e) { /* private mode */ }
-    hudPos.init = false; wavesDirty = true; dirty = true;
+    wavesDirty = true; dirty = true;
   }
   animBtn.addEventListener('click', () => setAnim(animMode === 'waves' ? 'silk' : 'waves'));
 
@@ -559,9 +559,8 @@
     } else {
       hudU = 0.5;
     }
-    if (animMode === 'waves') edge = 1;
     hudIn.style.opacity = edge.toFixed(3);
-    const p = animMode === 'waves' ? [W * 0.5, H * 0.5] : proj(P(hudU, 0, MAIN));   // waves: in the dark eye at the centre
+    const p = proj(P(hudU, 0, MAIN));   // same path in both animations: the ribbon is computed even while the waves show
     const loY = r + 34, hiY = H - r - 40;
     const tx = p[0];
     const ty = loY > hiY ? H / 2 : clamp(p[1], loY, hiY);
