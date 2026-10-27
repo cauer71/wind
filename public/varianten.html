@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strömung – Varianten</title>
+<meta name="description" content="Fünf waagrechte Seiden-Animationen für Wind Südtirol zur Auswahl.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2305060b'/%3E%3Cpath d='M5 13c5-5 9 3 14-1s7-2 8 0M5 20c5-4 9 3 14-1s6-2 8 0' fill='none' stroke='%23e5ec3f' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<style>
+.vg { display: flex; flex-direction: column; gap: var(--cds-gap-lg); font-family: var(--font-anthropic-sans); }
+.vg h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+.vg-lead { margin: 4px 0 0; color: var(--color-fg-muted); }
+.vg-stage { position: relative; background: #05060b; border-radius: var(--cds-radius); overflow: hidden; border: 1px solid var(--color-border-line); aspect-ratio: 2.2 / 1; min-height: 220px; }
+.vg-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.vg-stage .vg-ring { position: absolute; width: 22%; aspect-ratio: 1; border-radius: 50%; border: 1px dotted rgba(255,255,255,.7); transform: translate(-50%, -50%); pointer-events: none; transition: opacity .6s; }
+.vg-now { position: absolute; left: 16px; bottom: 12px; color: rgba(238,240,255,.85); font-size: 13px; letter-spacing: .04em; text-shadow: 0 0 8px rgba(0,0,0,.6); }
+.vg-now b { font-weight: 600; }
+.vg-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.vg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: var(--cds-gap-md); }
+.vg-card { text-align: left; font: inherit; color: inherit; background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 0; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; }
+.vg-card:hover { border-color: var(--color-accent); }
+.vg-card[aria-pressed="true"] { border-color: var(--color-accent); box-shadow: 0 0 0 2px var(--color-accent); }
+.vg-card img { width: 100%; aspect-ratio: 2.2 / 1; object-fit: cover; display: block; background: #05060b; }
+.vg-card span { padding: 10px 12px 12px; display: block; }
+.vg-card strong { display: block; font-size: 15px; margin-bottom: 4px; }
+.vg-card small { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); line-height: 1.4; display: block; }
+.vg-foot { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.vg-foot a, .vg-lead a { color: inherit; }
+</style>
+</head>
+<body>
+<div class="wv-page-wrap">
+<div class="vg">
+  <header>
+    <h1>Strömung – fünf Varianten</h1>
+    <p class="vg-lead">Waagrecht wie das Windband, so weich wie die Wellen. Eine Variante antippen, um sie live zu sehen; „In der App öffnen“ zeigt sie mit den Wetterwerten. Zurück zur <a href="./">App</a>.</p>
+  </header>
+  <section class="vg-stage" id="vg-stage" aria-label="Live-Vorschau">
+    <canvas id="vg-canvas"></canvas>
+    <div class="vg-ring" id="vg-ring" aria-hidden="true"></div>
+    <div class="vg-now" id="vg-now">—</div>
+  </section>
+  <div class="vg-bar">
+    <a class="wv-btn" id="vg-open" href="./?anim=h1">In der App öffnen</a>
+    <button class="wv-btn" id="vg-ringbtn" type="button" aria-pressed="true">Ring zeigen</button>
+  </div>
+  <div class="vg-grid" id="vg-grid"></div>
+  <p class="vg-foot">Alle Varianten werden im Browser berechnet (WebGL) und wiederholen sich nahtlos.</p>
+</div>
+</div>
+<script src="variants/index.js"></script>
+<script>
+(function () {
+  const list = window.FLOW_VARIANT_LIST || [];
+  const grid = document.getElementById('vg-grid'), canvas = document.getElementById('vg-canvas');
+  const nowEl = document.getElementById('vg-now'), openEl = document.getElementById('vg-open');
+  const ring = document.getElementById('vg-ring'), ringBtn = document.getElementById('vg-ringbtn');
+  let api = null, cur = null, period = 10, showRing = true;
+  const load = (id) => new Promise((res, rej) => {
+    if (window.WAVE_VARIANTS && window.WAVE_VARIANTS[id]) return res();
+    const s = document.createElement('script'); s.src = `variants/${id}.js`; s.onload = res; s.onerror = rej; document.head.appendChild(s);
+  });
+  function fit() { if (api) api.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1); }
+  async function pick(id) {
+    await load(id);
+    if (api) { api.destroy(); api = null; }
+    api = window.WAVE_VARIANTS[id].create(canvas, {});
+    if (!api) { nowEl.textContent = 'WebGL nicht verfügbar'; return; }
+    cur = id; period = api.period || 10; fit();
+    const v = list.find((x) => x.id === id) || { title: id };
+    nowEl.innerHTML = ''; const b = document.createElement('b'); b.textContent = v.title; nowEl.append(b, ` · ${id.toUpperCase()}`);
+    openEl.href = `./?anim=${id}`;
+    grid.querySelectorAll('.vg-card').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.id === id)));
+    try { localStorage.setItem('wind-flow', id); } catch (e) { /* private mode */ }
+  }
+  for (const v of list) {
+    const c = document.createElement('button'); c.type = 'button'; c.className = 'vg-card'; c.dataset.id = v.id;
+    const img = document.createElement('img'); img.src = `variants/${v.id}.jpg`; img.alt = ''; img.loading = 'lazy';
+    const sp = document.createElement('span'); const st = document.createElement('strong'); st.textContent = `${v.id.toUpperCase()} · ${v.title}`;
+    const sm = document.createElement('small'); sm.textContent = v.description; sp.append(st, sm); c.append(img, sp);
+    c.addEventListener('click', () => { pick(v.id); document.getElementById('vg-stage').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
+    grid.appendChild(c);
+  }
+  ringBtn.addEventListener('click', () => { showRing = !showRing; ringBtn.setAttribute('aria-pressed', String(showRing)); ring.style.opacity = showRing ? 1 : 0; });
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(canvas); else window.addEventListener('resize', fit);
+  let x = 0.5, dir = 1, last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (api) {
+      const t = (now / 1000) % period;
+      api.render(t);
+      // the ring rides on the band like in the app: slowly across, along centerline()
+      x += dir * dt / 40; if (x > 0.8 || x < 0.2) dir = -dir;
+      ring.style.left = (x * 100) + '%';
+      ring.style.top = (api.centerline ? api.centerline(x, t) * 100 : 50) + '%';
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  let start = null;
+  try { start = localStorage.getItem('wind-flow'); } catch (e) { /* private mode */ }
+  const q = new URL(location.href).searchParams.get('v');
+  pick(list.some((v) => v.id === q) ? q : list.some((v) => v.id === start) ? start : (list[0] && list[0].id) || 'h1');
+})();
+</script>
+</body>
+</html>
