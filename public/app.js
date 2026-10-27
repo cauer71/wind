@@ -385,7 +385,9 @@
       .finally(() => { f.loading = null; });
     return f.loading;
   }
-  const available = (m) => m === 'silk' || (m === 'waves' && !!alts.waves.api) || (m === 'flow' && webglOk);
+  // 'flow' only once the variants exist (variants/index.js lists them)
+  const flowReady = () => webglOk && Array.isArray(window.FLOW_VARIANT_LIST) && window.FLOW_VARIANT_LIST.length > 0;
+  const available = (m) => m === 'silk' || (m === 'waves' && !!alts.waves.api) || (m === 'flow' && flowReady());
   function setAnim(mode, instant) {
     if (!available(mode)) mode = 'silk';
     if (mode === 'flow' && !(alts.flow.api && alts.flow.id === flowId)) {
