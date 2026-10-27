@@ -183,6 +183,6 @@ html.wv-noscroll, html.wv-noscroll body { overflow: hidden; }
 /* second animation: soft silk waves, cross-faded with the wind ribbon */
 #wv-canvas, .wv-waves { transition: opacity 1.2s ease; }
 .wv-waves { opacity: 0; pointer-events: none; }
-.wv-stage.is-waves .wv-waves { opacity: 1; }
-.wv-stage.is-waves #wv-canvas { opacity: 0; }
+.wv-stage.is-waves #wv-waves, .wv-stage.is-flow #wv-flow { opacity: 1; }
+.wv-stage.is-waves #wv-canvas, .wv-stage.is-flow #wv-canvas { opacity: 0; }
 #wv-anim[aria-pressed="true"] { background: rgba(255,255,255,.22); border-color: rgba(255,255,255,.55); }

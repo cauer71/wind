@@ -119,6 +119,25 @@
   }
   let PC = mixPal(PAL.wind, PAL.wind, 0);
 
+  // the same colour story for the horizontal silk variants ('Strömung'), tuned for their dark look:
+  // crest = the thin glowing fold lines, halo = their soft glow, bg = the ground (sRGB 0..1)
+  const VPAL = {
+    wind:   { crest: [0.50, 0.52, 0.82], halo: [0.26, 0.27, 0.52], bg: [0.075, 0.078, 0.105] },
+    good:   { crest: [0.40, 0.68, 0.74], halo: [0.14, 0.32, 0.38], bg: [0.060, 0.080, 0.090] },
+    mid:    { crest: [0.80, 0.64, 0.46], halo: [0.40, 0.26, 0.24], bg: [0.090, 0.075, 0.070] },
+    bad:    { crest: [0.78, 0.42, 0.58], halo: [0.40, 0.14, 0.28], bg: [0.090, 0.055, 0.070] },
+    pollen: { crest: [0.30, 0.55, 0.98], halo: [0.05, 0.14, 0.50], bg: [0.030, 0.045, 0.100] }
+  };
+  const mixV = (a, b, f) => ({ crest: lerpA(a.crest, b.crest, f), halo: lerpA(a.halo, b.halo, f), bg: lerpA(a.bg, b.bg, f) });
+  function vpalTarget() {
+    const aq = (q) => (q < 0.5 ? mixV(VPAL.good, VPAL.mid, q / 0.5) : mixV(VPAL.mid, VPAL.bad, clamp((q - 0.5) / 0.5, 0, 1)));
+    if (page === 2) return aq(S.aqN);
+    if (page === 3) return aq(S.aqP);
+    if (page === 4) return VPAL.pollen;
+    return VPAL.wind;
+  }
+  let VC = mixV(VPAL.wind, VPAL.wind, 0);
+
   // ---------- ribbon geometry (mirrors the vertex shader) ----------
   // alpha: how much of the cloth shows. GHOST draws every layer faintly (so folds behind shine through),
   // NEAR then lays the front-most layer on top – together a single layer covers about 70 %.
@@ -321,33 +340,84 @@
     stage.style.setProperty('--wv-k', String(W / 1000));
     hudScale = isFull() ? clamp(Math.min(W / 1050, H / 520), 0.6, 1.6) : clamp(W / 1050, 0.6, 1.15);
     hudPos.init = false;
-    if (waves) waves.resize(W, H, window.devicePixelRatio || 1);   // waves.js caps its own pixel budget
-    wavesDirty = true;
+    for (const k in alts) { const a = alts[k]; if (a.api) a.api.resize(W, H, window.devicePixelRatio || 1); a.dirty = true; }   // the libraries cap their own pixel budget
   }
   if (window.ResizeObserver) new ResizeObserver(resize).observe(box);
   window.addEventListener('resize', resize);
 
-  // ---------- second animation: soft silk waves ----------
-  // The wind ribbon ('silk') or a calm loop of silk waves ('waves', waves.js) fills the stage; the switch
-  // cross-fades the two canvases, and both are drawn only while one is visible or fading.
-  const wavesCanvas = document.getElementById('wv-waves');
+  // ---------- further animations ----------
+  // 'silk' = the wind ribbon drawn above; 'waves' = soft silk waves (waves.js); 'flow' = a horizontal silk
+  // variant (variants/<id>.js, loaded when first needed). The switch cycles silk → waves → flow and
+  // cross-fades the canvases; only the visible one (and, while fading, the previous one) is drawn.
   const animBtn = document.getElementById('wv-anim');
   const FADE_MS = 1300;
-  let waves = null, wavesDirty = true, animMode = 'silk', fadeUntil = 0;
-  try { waves = typeof window.createWaves === 'function' ? window.createWaves(wavesCanvas, {}) : null; } catch (e) { waves = null; }
-  if (!waves) { animBtn.hidden = true; wavesCanvas.remove(); }
+  const FLOW_IDS = ['h1', 'h2', 'h3', 'h4', 'h5'];
+  const ANIM_NAME = { silk: 'Windband', waves: 'Wellen', flow: 'Strömung' };
+  const alts = {
+    waves: { canvas: document.getElementById('wv-waves'), api: null, dirty: true, period: 10 },
+    flow: { canvas: document.getElementById('wv-flow'), api: null, dirty: true, period: 10, id: null, loading: null }
+  };
+  try { alts.waves.api = typeof window.createWaves === 'function' ? window.createWaves(alts.waves.canvas, {}) : null; } catch (e) { alts.waves.api = null; }
+  if (!alts.waves.api) alts.waves.canvas.remove();
+  let flowId = 'h1', animMode = 'silk', prevMode = 'silk', fadeUntil = 0;
+  const webglOk = !!alts.waves.api;
+  function loadScript(src) {
+    return new Promise((res, rej) => { const el = document.createElement('script'); el.src = src; el.onload = res; el.onerror = rej; document.head.appendChild(el); });
+  }
+  // load (once) and create the horizontal variant `id`; replaces a previously created one
+  function loadFlow(id) {
+    const f = alts.flow;
+    if (f.api && f.id === id) return Promise.resolve(true);
+    if (f.loading && f.loadingId === id) return f.loading;
+    f.loadingId = id;
+    f.loading = (window.WAVE_VARIANTS && window.WAVE_VARIANTS[id] ? Promise.resolve() : loadScript(`variants/${id}.js`))
+      .then(() => {
+        const v = window.WAVE_VARIANTS && window.WAVE_VARIANTS[id];
+        if (!v) return false;
+        if (f.api) { try { f.api.destroy(); } catch (e) { /* already gone */ } f.api = null; }
+        f.api = v.create(f.canvas, {});
+        if (!f.api) return false;
+        f.id = id; f.period = f.api.period || 10; f.dirty = true;
+        if (W) f.api.resize(W, H, window.devicePixelRatio || 1);
+        return true;
+      })
+      .catch(() => false)
+      .finally(() => { f.loading = null; });
+    return f.loading;
+  }
+  // 'flow' only once the variants exist (variants/index.js lists them)
+  const flowReady = () => webglOk && Array.isArray(window.FLOW_VARIANT_LIST) && window.FLOW_VARIANT_LIST.length > 0;
+  const available = (m) => m === 'silk' || (m === 'waves' && !!alts.waves.api) || (m === 'flow' && flowReady());
   function setAnim(mode, instant) {
-    if (!waves) mode = 'silk';
+    if (!available(mode)) mode = 'silk';
+    if (mode === 'flow' && !(alts.flow.api && alts.flow.id === flowId)) {
+      loadFlow(flowId).then((ok) => { if (ok) setAnim('flow', instant); });
+      return;
+    }
     if (mode === animMode && !instant) return;
-    animMode = mode;
+    prevMode = animMode; animMode = mode;
     fadeUntil = instant ? 0 : performance.now() + FADE_MS;
     stage.classList.toggle('is-waves', mode === 'waves');
-    animBtn.setAttribute('aria-pressed', String(mode === 'waves'));
-    animBtn.title = mode === 'waves' ? 'Animation wechseln: Windband (A)' : 'Animation wechseln: Wellen (A)';
+    stage.classList.toggle('is-flow', mode === 'flow');
+    animBtn.setAttribute('aria-pressed', String(mode !== 'silk'));
+    animBtn.dataset.mode = mode;
+    animBtn.title = `Animation: ${ANIM_NAME[mode]} – weiter zu ${ANIM_NAME[nextAnim(mode)]} (A)`;
     try { localStorage.setItem('wind-anim', mode); } catch (e) { /* private mode */ }
-    hudPos.init = false; wavesDirty = true; dirty = true;
+    for (const k in alts) alts[k].dirty = true;
+    dirty = true; gov.skip = 20; gov.mode = 0; gov.nd = 0;
   }
-  animBtn.addEventListener('click', () => setAnim(animMode === 'waves' ? 'silk' : 'waves'));
+  function nextAnim(m) {
+    const order = ['silk', 'waves', 'flow'].filter(available);
+    return order[(order.indexOf(m) + 1) % order.length];
+  }
+  function setFlowVariant(id) {
+    if (!FLOW_IDS.includes(id)) return;
+    flowId = id;
+    try { localStorage.setItem('wind-flow', id); } catch (e) { /* private mode */ }
+    if (animMode === 'flow') setAnim('flow', false);
+  }
+  if (!webglOk) animBtn.hidden = true;
+  animBtn.addEventListener('click', () => setAnim(nextAnim(animMode)));
 
   // frame-time governor for the waves (from the waves prototype): the median of the first 60 frame
   // intervals is the display's own rate; at >= 40 Hz, if most of 120 frames are slower than
@@ -356,6 +426,7 @@
   // it only if frames get clearly faster. Long gaps (hidden tab) are ignored.
   const gov = { skip: 20, mode: 0, thr: 21, base: 0, q0: 1, n: 0, slow: 0, dts: new Float32Array(60), nd: 0 };
   function governWaves(dt) {
+    const waves = alts[animMode] && alts[animMode].api;
     if (!waves || !waves.setQuality || dt > 250) return;
     if (gov.skip > 0) { gov.skip--; return; }
     if (gov.mode === 0 || gov.mode === 2) {
@@ -414,7 +485,7 @@
   document.addEventListener('keydown', (ev) => {
     if (ev.target.closest && ev.target.closest('input, select, textarea')) return;
     if ((ev.key === 'f' || ev.key === 'F') && !ev.metaKey && !ev.ctrlKey && !ev.altKey) toggleFull();
-    else if ((ev.key === 'a' || ev.key === 'A') && !ev.metaKey && !ev.ctrlKey && !ev.altKey && waves) setAnim(animMode === 'waves' ? 'silk' : 'waves');
+    else if ((ev.key === 'a' || ev.key === 'A') && !ev.metaKey && !ev.ctrlKey && !ev.altKey && webglOk) setAnim(nextAnim(animMode));
     else if (ev.key === 'Escape' && stage.classList.contains('wv-fs')) setFull(false);
   });
 
@@ -559,11 +630,12 @@
     } else {
       hudU = 0.5;
     }
-    if (animMode === 'waves') edge = 1;
     hudIn.style.opacity = edge.toFixed(3);
-    const p = animMode === 'waves' ? [W * 0.5, H * 0.5] : proj(P(hudU, 0, MAIN));   // waves: in the dark eye at the centre
+    const p = proj(P(hudU, 0, MAIN));   // same path in both animations: the ribbon is computed even while the waves show
     const loY = r + 34, hiY = H - r - 40;
     const tx = p[0];
+    const fa = alts.flow.api;
+    if (animMode === 'flow' && fa && fa.centerline) p[1] = fa.centerline(clamp(tx / W, 0, 1), (performance.now() / 1000) % alts.flow.period) * H;
     const ty = loY > hiY ? H / 2 : clamp(p[1], loY, hiY);
     if (!hudPos.init || reduce) { hudPos.x = tx; hudPos.y = ty; hudPos.init = true; }
     else { const k = 1 - Math.exp(-dt / 0.45); hudPos.x += (tx - hudPos.x) * k; hudPos.y += (ty - hudPos.y) * k; }
@@ -591,6 +663,7 @@
       renderTitle();
     } else if (lang !== LANGS[0]) setLang(LANGS[0], false);
     dirty = true;
+    for (const k in alts) alts[k].dirty = true;   // new page colours (also redraws a still frame with reduced motion)
   }
     // pages whose values the data sources do not have for this place are skipped
   const PAGE_FIELDS = { 1: ['wind_kmh'], 2: ['no2_ugm3'], 3: ['pm10_ugm3', 'pm25_ugm3', 'o3_ugm3', 'so2_ugm3'], 4: ['pollen_m3'] };
@@ -841,6 +914,8 @@
     S.flowSign += (T.flowSign - S.flowSign) * (reduce ? 1 : 1 - Math.exp(-dt / 2.4));
     S.gauge += (T.gauge - S.gauge) * (reduce ? 1 : 1 - Math.exp(-dt / 0.7));
     PC = mixPal(PC, palTarget(), reduce ? 1 : 1 - Math.exp(-dt / 1.3));
+    VC = mixV(VC, vpalTarget(), reduce ? 1 : 1 - Math.exp(-dt / 1.3));
+    if (alts.flow.api && alts.flow.api.setColors && (animMode === 'flow' || now < fadeUntil)) alts.flow.api.setColors(VC);
 
     G.windN = clamp(S.wind / 30, 0, 1.3);
     G.turb = clamp((S.gust - S.wind) / 18, 0, 1.4) + 0.25 * Math.min(G.windN, 1);
@@ -856,15 +931,18 @@
       stepParticles(0);
     }
     const fading = now < fadeUntil;
-    if (W && dirty && (animMode === 'silk' || fading)) {
+    const shows = (m) => animMode === m || (fading && prevMode === m);
+    if (W && dirty && shows('silk')) {
       if (gl) renderGL(); else if (ctx2d) render2d();
       if (reduce) dirty = false;
     }
-    if (animMode === 'waves' && !fading && !reduce) governWaves(rawMs);
-    if (W && waves && (animMode === 'waves' || fading) && (!reduce || wavesDirty)) {
-      // the loop is exactly 10 s long; the time is reduced here so the shader never sees large numbers
-      waves.render(reduce ? 0 : (now / 1000) % 10);
-      wavesDirty = false;
+    if (animMode !== 'silk' && !fading && !reduce) governWaves(rawMs);
+    for (const k in alts) {
+      const a = alts[k];
+      if (!W || !a.api || !shows(k) || (reduce && !a.dirty)) continue;
+      // each loop is exactly a.period long; the time is reduced here so the shader never sees large numbers
+      a.api.render(reduce ? 0 : (now / 1000) % a.period);
+      a.dirty = false;
     }
     updateHud(dt);
     waveFlag(dt);
@@ -1115,7 +1193,14 @@
   const urlAnim = new URL(location.href).searchParams.get('anim');
   let storedAnim = null;
   try { storedAnim = localStorage.getItem('wind-anim'); } catch (e) { /* private mode */ }
-  setAnim(urlAnim === 'wellen' || urlAnim === 'waves' ? 'waves' : urlAnim === 'band' || urlAnim === 'silk' ? 'silk' : storedAnim === 'waves' ? 'waves' : 'silk', true);
+  let storedFlow = null;
+  try { storedFlow = localStorage.getItem('wind-flow'); } catch (e) { /* private mode */ }
+  // ?anim=band | wellen | stroemung, or a variant id (?anim=h3) for the horizontal flow
+  if (FLOW_IDS.includes(urlAnim)) flowId = urlAnim; else if (FLOW_IDS.includes(storedFlow)) flowId = storedFlow;
+  if (FLOW_IDS.includes(urlAnim)) { try { localStorage.setItem('wind-flow', urlAnim); } catch (e) { /* private mode */ } }
+  const ANIM_URL = { band: 'silk', silk: 'silk', wellen: 'waves', waves: 'waves', stroemung: 'flow', 'strömung': 'flow', flow: 'flow' };
+  setAnim(ANIM_URL[urlAnim] || (FLOW_IDS.includes(urlAnim) ? 'flow' : null) || (['silk', 'waves', 'flow'].includes(storedAnim) ? storedAnim : 'silk'), true);
+  window.windAnim = { set: setAnim, variant: setFlowVariant, get: () => ({ mode: animMode, variant: flowId }) };   // used by the variant gallery
   setPage(0);
   requestAnimationFrame((t) => { last = t; requestAnimationFrame(frame); });
   load(startCode, false);
