@@ -124,13 +124,16 @@
   const VPAL = {
     wind:   { crest: [0.50, 0.52, 0.82], halo: [0.26, 0.27, 0.52], bg: [0.075, 0.078, 0.105] },
     good:   { crest: [0.40, 0.68, 0.74], halo: [0.14, 0.32, 0.38], bg: [0.060, 0.080, 0.090] },
-    mid:    { crest: [0.80, 0.64, 0.46], halo: [0.40, 0.26, 0.24], bg: [0.090, 0.075, 0.070] },
-    bad:    { crest: [0.78, 0.42, 0.58], halo: [0.40, 0.14, 0.28], bg: [0.090, 0.055, 0.070] },
-    pollen: { crest: [0.30, 0.55, 0.98], halo: [0.05, 0.14, 0.50], bg: [0.030, 0.045, 0.100] }
+    mid:    { crest: [0.84, 0.70, 0.42], halo: [0.42, 0.32, 0.15], bg: [0.090, 0.078, 0.065] },
+    bad:    { crest: [0.80, 0.44, 0.60], halo: [0.44, 0.18, 0.32], bg: [0.098, 0.064, 0.080] },
+    pollen: { crest: [0.38, 0.64, 1.00], halo: [0.11, 0.23, 0.62], bg: [0.048, 0.062, 0.122] }
   };
   const mixV = (a, b, f) => ({ crest: lerpA(a.crest, b.crest, f), halo: lerpA(a.halo, b.halo, f), bg: lerpA(a.bg, b.bg, f) });
+  // mixing two hues (teal + gold) drifts towards grey; give the in-between tones their saturation back
+  const resat = (c, k) => { const l = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; return c.map((x) => clamp(l + (x - l) * k, 0, 1)); };
+  const mixVS = (a, b, f) => { const m = mixV(a, b, f), k = 1 + 1.2 * f * (1 - f); return { crest: resat(m.crest, k), halo: resat(m.halo, k), bg: m.bg }; };
   function vpalTarget() {
-    const aq = (q) => (q < 0.5 ? mixV(VPAL.good, VPAL.mid, q / 0.5) : mixV(VPAL.mid, VPAL.bad, clamp((q - 0.5) / 0.5, 0, 1)));
+    const aq = (q) => (q < 0.5 ? mixVS(VPAL.good, VPAL.mid, q / 0.5) : mixVS(VPAL.mid, VPAL.bad, clamp((q - 0.5) / 0.5, 0, 1)));
     if (page === 2) return aq(S.aqN);
     if (page === 3) return aq(S.aqP);
     if (page === 4) return VPAL.pollen;
@@ -1200,7 +1203,7 @@
   if (FLOW_IDS.includes(urlAnim)) { try { localStorage.setItem('wind-flow', urlAnim); } catch (e) { /* private mode */ } }
   const ANIM_URL = { band: 'silk', silk: 'silk', wellen: 'waves', waves: 'waves', stroemung: 'flow', 'strömung': 'flow', flow: 'flow' };
   setAnim(ANIM_URL[urlAnim] || (FLOW_IDS.includes(urlAnim) ? 'flow' : null) || (['silk', 'waves', 'flow'].includes(storedAnim) ? storedAnim : 'silk'), true);
-  window.windAnim = { set: setAnim, variant: setFlowVariant, get: () => ({ mode: animMode, variant: flowId }) };   // used by the variant gallery
+  window.windAnim = { set: setAnim, variant: setFlowVariant, get: () => ({ mode: animMode, variant: flowId }), colors: () => VC };   // used by the variant gallery
   setPage(0);
   requestAnimationFrame((t) => { last = t; requestAnimationFrame(frame); });
   load(startCode, false);

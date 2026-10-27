@@ -10,11 +10,13 @@ Luftqualität und Pollen – jetzt mit Live-Daten und frei wählbarem Ort in Sü
 
 - **Vollbild:** Taste oben rechts im Band, Taste `F` oder Doppelklick aufs Band; `Esc` beendet.
   Auf dem iPhone (keine Fullscreen-API) füllt das Band den ganzen Bildschirm.
-- **Animation wechseln:** Knopf mit dem Wellen-Symbol oder Taste `A` blendet zwischen dem Windband und
-  ruhig fließender dunkler Seide („Wellen“, `public/waves.js`) über; die Wahl wird gemerkt, direkt verlinkbar
-  mit `?anim=wellen`. Die Wellen sind ein prozeduraler WebGL-Shader (10-s-Schleife, nahtlos), der einem
-  Stock-Video nachempfunden ist – das Video selbst ist nicht enthalten. Auf langsamen Geräten senkt eine
-  Regelung die interne Auflösung.
+- **Animation wechseln:** Knopf mit dem Wellen-Symbol oder Taste `A` schaltet reihum: Windband → Wellen
+  (ruhig fließende dunkle Seide, `public/waves.js`) → Strömung (waagrechtes Seidenband, eine von fünf
+  Varianten in `public/variants/`), mit Überblendung. Die Wahl wird gemerkt; direkt verlinkbar mit
+  `?anim=band`, `?anim=wellen`, `?anim=stroemung` oder einer Variante `?anim=h1` … `?anim=h5`.
+  Die Varianten lassen sich auf `varianten.html` vergleichen und auswählen. Die Strömung färbt sich je Seite
+  wie das Windband (Lavendel Wind, Türkis → Gold → Rosé Luft, Blau Pollen). Wellen und Strömung sind
+  prozedurale WebGL-Shader (nahtlose Schleifen); auf langsamen Geräten senkt eine Regelung die Auflösung.
 - **Musik:** startet mit dem ersten Klick oder Tipp aufs Band (Browser erlauben Ton erst nach einer
   Bedienung) und lässt sich mit dem Lautsprecher-Knopf aus- und einschalten. Der Autorenhinweis
   wird am Anfang und bei jedem Start der Musik eingeblendet und blendet nach ein paar Sekunden aus.
