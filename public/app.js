@@ -119,6 +119,25 @@
   }
   let PC = mixPal(PAL.wind, PAL.wind, 0);
 
+  // the same colour story for the horizontal silk variants ('Strömung'), tuned for their dark look:
+  // crest = the thin glowing fold lines, halo = their soft glow, bg = the ground (sRGB 0..1)
+  const VPAL = {
+    wind:   { crest: [0.50, 0.52, 0.82], halo: [0.26, 0.27, 0.52], bg: [0.075, 0.078, 0.105] },
+    good:   { crest: [0.40, 0.68, 0.74], halo: [0.14, 0.32, 0.38], bg: [0.060, 0.080, 0.090] },
+    mid:    { crest: [0.80, 0.64, 0.46], halo: [0.40, 0.26, 0.24], bg: [0.090, 0.075, 0.070] },
+    bad:    { crest: [0.78, 0.42, 0.58], halo: [0.40, 0.14, 0.28], bg: [0.090, 0.055, 0.070] },
+    pollen: { crest: [0.30, 0.55, 0.98], halo: [0.05, 0.14, 0.50], bg: [0.030, 0.045, 0.100] }
+  };
+  const mixV = (a, b, f) => ({ crest: lerpA(a.crest, b.crest, f), halo: lerpA(a.halo, b.halo, f), bg: lerpA(a.bg, b.bg, f) });
+  function vpalTarget() {
+    const aq = (q) => (q < 0.5 ? mixV(VPAL.good, VPAL.mid, q / 0.5) : mixV(VPAL.mid, VPAL.bad, clamp((q - 0.5) / 0.5, 0, 1)));
+    if (page === 2) return aq(S.aqN);
+    if (page === 3) return aq(S.aqP);
+    if (page === 4) return VPAL.pollen;
+    return VPAL.wind;
+  }
+  let VC = mixV(VPAL.wind, VPAL.wind, 0);
+
   // ---------- ribbon geometry (mirrors the vertex shader) ----------
   // alpha: how much of the cloth shows. GHOST draws every layer faintly (so folds behind shine through),
   // NEAR then lays the front-most layer on top – together a single layer covers about 70 %.
@@ -642,6 +661,7 @@
       renderTitle();
     } else if (lang !== LANGS[0]) setLang(LANGS[0], false);
     dirty = true;
+    for (const k in alts) alts[k].dirty = true;   // new page colours (also redraws a still frame with reduced motion)
   }
     // pages whose values the data sources do not have for this place are skipped
   const PAGE_FIELDS = { 1: ['wind_kmh'], 2: ['no2_ugm3'], 3: ['pm10_ugm3', 'pm25_ugm3', 'o3_ugm3', 'so2_ugm3'], 4: ['pollen_m3'] };
@@ -892,6 +912,8 @@
     S.flowSign += (T.flowSign - S.flowSign) * (reduce ? 1 : 1 - Math.exp(-dt / 2.4));
     S.gauge += (T.gauge - S.gauge) * (reduce ? 1 : 1 - Math.exp(-dt / 0.7));
     PC = mixPal(PC, palTarget(), reduce ? 1 : 1 - Math.exp(-dt / 1.3));
+    VC = mixV(VC, vpalTarget(), reduce ? 1 : 1 - Math.exp(-dt / 1.3));
+    if (alts.flow.api && alts.flow.api.setColors && (animMode === 'flow' || now < fadeUntil)) alts.flow.api.setColors(VC);
 
     G.windN = clamp(S.wind / 30, 0, 1.3);
     G.turb = clamp((S.gust - S.wind) / 18, 0, 1.4) + 0.25 * Math.min(G.windN, 1);
