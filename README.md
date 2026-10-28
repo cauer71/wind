@@ -10,7 +10,7 @@ Luftqualität und Pollen – jetzt mit Live-Daten und frei wählbarem Ort in Sü
 
 - **Vollbild:** Taste oben rechts im Band, Taste `F` oder Doppelklick aufs Band; `Esc` beendet.
   Auf dem iPhone (keine Fullscreen-API) füllt das Band den ganzen Bildschirm.
-- **Animation wechseln:** Knopf mit dem Wellen-Symbol oder Taste `A` schaltet reihum: Windband → Wellen
+- **Animation wechseln:** Pfeiltasten ← → gehen alle sieben Animationen durch (Windband, Wellen, H1–H5). Knopf mit dem Wellen-Symbol oder Taste `A` schaltet reihum: Windband → Wellen
   (ruhig fließende dunkle Seide, `public/waves.js`) → Strömung (waagrechtes Seidenband, eine von fünf
   Varianten in `public/variants/`), mit Überblendung. Die Wahl wird gemerkt; direkt verlinkbar mit
   `?anim=band`, `?anim=wellen`, `?anim=stroemung` oder einer Variante `?anim=h1` … `?anim=h5`.

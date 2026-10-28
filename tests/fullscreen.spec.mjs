@@ -298,3 +298,19 @@ test('variant gallery lists the five variants and opens one in the app', async (
   expect(await page.evaluate(() => window.windAnim.get().variant)).toBe('h4');
   expect(errors).toEqual([]);
 });
+
+test('arrow keys step through Windband, Wellen and the five Strömung variants', async ({ page }) => {
+  await page.goto('/?anim=band');
+  await expect(page.locator('#wv-title')).toHaveText('Wind Bozen');
+  const seen = [];
+  for (let i = 0; i < 7; i++) {
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(() => page.evaluate(() => window.windAnim.get())).not.toEqual(seen[seen.length - 1] || null);
+    await page.waitForTimeout(300);
+    const g = await page.evaluate(() => window.windAnim.get());
+    seen.push(g.mode === 'flow' ? g.variant : g.mode);
+  }
+  expect(seen).toEqual(['waves', 'h1', 'h2', 'h3', 'h4', 'h5', 'silk']);
+  await page.keyboard.press('ArrowLeft');
+  await expect.poll(async () => { const g = await page.evaluate(() => window.windAnim.get()); return g.mode === 'flow' ? g.variant : g.mode; }).toBe('h5');
+});

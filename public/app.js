@@ -413,6 +413,14 @@
     const order = ['silk', 'waves', 'flow'].filter(available);
     return order[(order.indexOf(m) + 1) % order.length];
   }
+  // arrow keys step through all seven: Windband, Wellen, then the five Strömung variants
+  function stepAnim(dir) {
+    const list = ['silk', 'waves'].filter(available).concat(flowReady() ? FLOW_IDS : []);
+    const cur = animMode === 'flow' ? flowId : animMode;
+    const next = list[(list.indexOf(cur) + dir + list.length) % list.length];
+    if (FLOW_IDS.includes(next)) { flowId = next; try { localStorage.setItem('wind-flow', next); } catch (e) { /* private mode */ } setAnim('flow', animMode === 'flow'); }
+    else setAnim(next);
+  }
   function setFlowVariant(id) {
     if (!FLOW_IDS.includes(id)) return;
     flowId = id;
@@ -489,6 +497,7 @@
     if (ev.target.closest && ev.target.closest('input, select, textarea')) return;
     if ((ev.key === 'f' || ev.key === 'F') && !ev.metaKey && !ev.ctrlKey && !ev.altKey) toggleFull();
     else if ((ev.key === 'a' || ev.key === 'A') && !ev.metaKey && !ev.ctrlKey && !ev.altKey && webglOk) setAnim(nextAnim(animMode));
+    else if ((ev.key === 'ArrowRight' || ev.key === 'ArrowLeft') && !ev.metaKey && !ev.ctrlKey && !ev.altKey && webglOk) { ev.preventDefault(); stepAnim(ev.key === 'ArrowRight' ? 1 : -1); }
     else if (ev.key === 'Escape' && stage.classList.contains('wv-fs')) setFull(false);
   });
 
