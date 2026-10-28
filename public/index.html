@@ -42,7 +42,6 @@
       <div class="wv-top">
         <span class="wv-time" data-f="time">—</span>
         <span class="wv-sample wv-live" id="wv-mode" data-i18n="live">Live</span>
-        <button class="wv-play" id="wv-play" type="button">Verlauf abspielen</button>
         <button class="wv-play wv-icon" id="wv-anim" type="button" aria-pressed="false" title="Animation wechseln: Wellen (A)">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 6.5c2-2.4 4-2.4 6.5 0s4.5 2.4 6.5 0M1.5 10.5c2-2.4 4-2.4 6.5 0s4.5 2.4 6.5 0" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
         </button>
@@ -139,13 +138,13 @@
 
   <section class="wv-card" id="wind-values">
     <h2>Alle Werte <span class="wv-vals-time" id="wv-vals-time"></span></h2>
-    <p class="wv-note">Die Stunde, die das Band gerade zeigt. Luftwerte von der nächsten APPA-Messstelle, Pollen als Modellwert.</p>
+    <p class="wv-note">Die aktuelle Stunde. Luftwerte von der nächsten APPA-Messstelle, Pollen als Modellwert.</p>
     <dl class="wv-vals" id="wv-vals"></dl>
   </section>
 
   <section class="wv-card" id="wind-timeline">
     <h2>Verlauf der letzten 48 Stunden</h2>
-    <p class="wv-note">Wind (Stundenmittel) und stärkste Böe in km/h. Die Linie markiert die Stunde, die das Band gerade zeigt – klicken springt zu einer Stunde.</p>
+    <p class="wv-note">Wind (Stundenmittel) und stärkste Böe in km/h. Die Linie markiert die aktuelle Stunde.</p>
     <div class="wv-chart" id="wv-chart"></div>
   </section>
 

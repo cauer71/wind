@@ -48,7 +48,7 @@
   const pageEls = Array.from(hud.querySelectorAll('.wv-page'));
   const hudBody = hud.querySelector('.wv-hud-body');
   const titleSub = titleCard.querySelector('.wv-t-sub');
-  const playBtn = document.getElementById('wv-play');
+  const playBtn = document.createElement('button');   // replay was removed: the stage shows live data only
   const compassEl = document.getElementById('wv-compass');
   const compassAvgEl = document.getElementById('wv-compass-avg');
   const pgBtn = document.getElementById('wv-pg');
@@ -1030,7 +1030,7 @@
     const tip = document.createElement('div'); tip.className = 'wv-tip'; chartBox.appendChild(tip);
     const bis = d3.bisector((p) => p.t).center;
     const nearest = (ev) => { const [mx] = d3.pointer(ev, svg.node()); return pts[bis(pts, x.invert(mx))]; };
-    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', Math.max(0, w - 10 - ml)).attr('height', h - 20).attr('fill', 'transparent').style('cursor', 'pointer')
+    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', Math.max(0, w - 10 - ml)).attr('height', h - 20).attr('fill', 'transparent')
       .on('pointermove', (ev) => {
         const p = nearest(ev); if (!p) return;
         tip.textContent = '';
@@ -1048,12 +1048,7 @@
         tip.style.top = '-6px';
       })
       .on('pointerleave', () => { tip.style.display = 'none'; })
-      .on('click', (ev) => {
-        const p = nearest(ev); if (!p) return;
-        if (!playing) { playing = true; applyModeLabels(); }
-        lastRow = performance.now();
-        showRow(p.i);
-      });
+      ;
   }
   if (window.ResizeObserver) new ResizeObserver(() => { if (chartBox.clientWidth !== chartW) drawTimeline(); }).observe(chartBox);
 

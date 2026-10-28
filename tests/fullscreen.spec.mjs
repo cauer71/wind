@@ -189,10 +189,7 @@ test('when the air feed has stopped, the live view skips the air pages and says 
   await expect(page.locator('#wv-pg')).toHaveText('2/5');
   await gotoPage(page, 1);
   await expect(page.locator('#wv-pg')).toHaveText('5/5');   // NO₂ and PM pages skipped
-  // replaying an hour that had air data brings the pages back
-  await page.evaluate(() => document.getElementById('wv-play').click());
-  await gotoPage(page, 3);
-  await expect(page.locator('#wv-pg')).toHaveText('3/5');
+  await expect(page.locator('#wv-play')).toHaveCount(0);   // live only, no replay
 });
 
 test('main page lists all values; missing ones without unit', async ({ page }) => {
