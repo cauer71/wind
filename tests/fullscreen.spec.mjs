@@ -189,10 +189,7 @@ test('when the air feed has stopped, the live view skips the air pages and says 
   await expect(page.locator('#wv-pg')).toHaveText('2/5');
   await gotoPage(page, 1);
   await expect(page.locator('#wv-pg')).toHaveText('5/5');   // NO₂ and PM pages skipped
-  // replaying an hour that had air data brings the pages back
-  await page.evaluate(() => document.getElementById('wv-play').click());
-  await gotoPage(page, 3);
-  await expect(page.locator('#wv-pg')).toHaveText('3/5');
+  await expect(page.locator('#wv-play')).toHaveCount(0);   // live only, no replay
 });
 
 test('main page lists all values; missing ones without unit', async ({ page }) => {
@@ -231,8 +228,86 @@ test('animation switch cross-fades to the silk waves, remembers the choice and k
   // remembered after a reload, switchable with the A key
   await page.reload();
   await expect(stage).toHaveClass(/is-waves/);
-  await page.keyboard.press('a');
+  await page.keyboard.press('a');                       // waves → flow (the horizontal silk)
   await expect(stage).not.toHaveClass(/is-waves/);
+  await expect(stage).toHaveClass(/is-flow/);
   await page.goto('/?anim=wellen');
   await expect(stage).toHaveClass(/is-waves/);
+});
+
+test('the switch cycles Windband → Wellen → Strömung → Windband', async ({ page }) => {
+  await page.goto('/?anim=band');
+  const stage = page.locator('#wind-stage'), btn = page.locator('#wv-anim');
+  await expect(page.locator('#wv-title')).toHaveText('Wind Bozen');
+  await btn.click(); await expect(stage).toHaveClass(/is-waves/);
+  await btn.click(); await expect(stage).toHaveClass(/is-flow/);
+  await expect(btn).toHaveAttribute('data-mode', 'flow');
+  await btn.click(); await expect(stage).not.toHaveClass(/is-flow|is-waves/);
+});
+
+test('Strömung: a chosen variant loads on demand, recolours and carries the ring on its centre line', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/?anim=h3');
+  const stage = page.locator('#wind-stage');
+  await expect(stage).toHaveClass(/is-flow/);
+  expect(await page.evaluate(() => window.windAnim.get())).toEqual({ mode: 'flow', variant: 'h3' });
+  expect(await page.evaluate(() => Object.keys(window.WAVE_VARIANTS))).toEqual(['h3']);   // only the chosen one is loaded
+  const buf = await page.locator('#wv-flow').evaluate((el) => ({ w: el.width, h: el.height }));
+  expect(buf.w).toBeGreaterThan(100);
+  // all five variants offer the same API
+  for (const id of ['h1', 'h2', 'h4', 'h5']) await page.addScriptTag({ url: `variants/${id}.js` });
+  const apis = await page.evaluate(() => Object.entries(window.WAVE_VARIANTS).map(([id, v]) => {
+    const c = document.createElement('canvas'); const a = v.create(c, {}); a.resize(600, 270, 1);
+    const ok = ['render', 'resize', 'destroy', 'setQuality', 'getQuality', 'setColors', 'centerline'].every((k) => typeof a[k] === 'function') && a.period >= 10 && !!a.defaultColors;
+    const y = a.centerline(0.5, 1); a.setColors({ crest: [0.8, 0.7, 0.4], halo: [0.4, 0.3, 0.15], bg: [0.09, 0.08, 0.06] }); a.render(1); a.destroy();
+    return [id, ok, y > 0.2 && y < 0.8];
+  }));
+  for (const [id, ok, mid] of apis) { expect(ok, id).toBe(true); expect(mid, id).toBe(true); }
+  // the ring rides on the band: its y follows centerline() (it eases, so allow a little lag)
+  await gotoPage(page, 1);
+  await page.waitForTimeout(2500);
+  const d = await page.evaluate(() => {
+    const st = document.getElementById('wind-stage').getBoundingClientRect();
+    const m = new DOMMatrix(getComputedStyle(document.getElementById('wind-hud')).transform);
+    const v = window.WAVE_VARIANTS.h3.create(document.createElement('canvas'), {}); v.resize(st.width, st.height, 1);
+    const t = (performance.now() / 1000) % v.period;
+    const y = v.centerline(m.m41 / st.width, t) * st.height; v.destroy();
+    return { hudY: m.m42, lineY: y, H: st.height };
+  });
+  expect(Math.abs(d.hudY - d.lineY)).toBeLessThan(d.H * 0.12);
+  expect(errors).toEqual([]);
+});
+
+test('variant gallery lists the five variants and opens one in the app', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/varianten.html');
+  const cards = page.locator('.vg-card');
+  await expect(cards).toHaveCount(5);
+  await expect(cards.nth(0)).toContainText('Seidenband');
+  await cards.nth(3).click();
+  await expect(cards.nth(3)).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#vg-now')).toContainText('Tiefe');
+  await expect(page.locator('#vg-open')).toHaveAttribute('href', './?anim=h4');
+  await page.locator('#vg-open').click();
+  await expect(page.locator('#wind-stage')).toHaveClass(/is-flow/);
+  expect(await page.evaluate(() => window.windAnim.get().variant)).toBe('h4');
+  expect(errors).toEqual([]);
+});
+
+test('arrow keys step through Windband, Wellen and the five Strömung variants', async ({ page }) => {
+  await page.goto('/?anim=band');
+  await expect(page.locator('#wv-title')).toHaveText('Wind Bozen');
+  const seen = [];
+  for (let i = 0; i < 7; i++) {
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(() => page.evaluate(() => window.windAnim.get())).not.toEqual(seen[seen.length - 1] || null);
+    await page.waitForTimeout(300);
+    const g = await page.evaluate(() => window.windAnim.get());
+    seen.push(g.mode === 'flow' ? g.variant : g.mode);
+  }
+  expect(seen).toEqual(['waves', 'h1', 'h2', 'h3', 'h4', 'h5', 'silk']);
+  await page.keyboard.press('ArrowLeft');
+  await expect.poll(async () => { const g = await page.evaluate(() => window.windAnim.get()); return g.mode === 'flow' ? g.variant : g.mode; }).toBe('h5');
 });
